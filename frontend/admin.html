@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"><title>Admin Dashboard | CookShare</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header></header>
+<main>
+<h1>CookShare Admin Dashboard</h1>
+<p>Protected API: JWT authentication + ADMIN role authorization.</p>
+<div id="stats" class="stats"></div>
+<section class="panel"><h2>Registered Users</h2><div id="users"></div></section>
+<section class="panel"><h2>Recipe Management</h2><div id="recipes"></div></section>
+</main>
+<script src="js/api.js"></script><script src="js/ui.js"></script>
+<script>
+async function loadAdmin(){
+ try{
+  const s=await api("/admin/dashboard");
+  stats.innerHTML=[
+   ["Total Users",s.users],["Total Recipes",s.recipes],
+   ["Total Reviews",s.reviews],["Recent Accesses",s.recentAccesses]
+  ].map(x=>`<div class="stat"><small>${x[0]}</small><br><strong>${x[1]}</strong></div>`).join("");
+
+  const us=await api("/admin/users");
+  users.innerHTML=us.length?us.map(u=>`<p>${u.name} · ${u.email} · <b>${u.role}</b></p>`).join(""):"No registered users.";
+
+  const rs=await api("/admin/recipes");
+  recipes.innerHTML=rs.length?rs.map(r=>`
+   <div class="recent"><b>${r.title}</b> · ${r.author} · ${r.status}
+   <button onclick="changeStatus(${r.id},'REJECTED')">Reject</button>
+   <button onclick="changeStatus(${r.id},'PUBLISHED')">Publish</button></div>`).join(""):"No real recipes yet.";
+ }catch(e){
+  document.body.innerHTML=`<main><div class="panel"><h2>Admin access denied</h2><p>${e.message}</p><a href="login.html">Login</a></div></main>`;
+ }
+}
+async function changeStatus(id,status){
+ await api("/admin/recipes/"+id+"/status",{method:"PATCH",body:JSON.stringify({status})});
+ loadAdmin();
+}
+loadAdmin();
+</script>
+</body></html>

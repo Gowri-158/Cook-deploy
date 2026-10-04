@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Shopping List | CookShare</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .delete-shop-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #fecaca;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .delete-shop-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+    [data-theme="dark"] .delete-shop-btn {
+      background: #450a0a;
+      color: #fca5a5;
+      border-color: #7f1d1d;
+    }
+    [data-theme="dark"] .delete-shop-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+    .delete-dish-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--danger);
+      font-size: 11.5px;
+      font-weight: 700;
+      border: 1px solid var(--danger);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .delete-dish-btn:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+    .dish-pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dish-pill:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .dish-pill.active {
+      background: var(--primary);
+      color: #ffffff !important;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+    }
+    .dish-group-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .dish-group-header {
+      padding: 12px 16px;
+      background: var(--panel-alt);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .dish-group-header h4 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .shopping-item-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      transition: all 0.2s ease;
+    }
+    .shopping-item-card:last-child {
+      border-bottom: none;
+    }
+    .shopping-item-card:hover {
+      background: var(--panel-alt);
+    }
+    .shopping-item-card.purchased {
+      opacity: 0.55;
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+<body>
+<header></header>
+
+<main>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+    <div>
+      <span class="pill" data-i18n="shopping">PANTRY & GROCERY MANAGER</span>
+      <h1 style="font-size:2.2rem;margin:8px 0 6px">Smart Shopping List</h1>
+      <p class="muted">Items are automatically organized by dish/recipe menu. Filter by dish to view only what you need to cook!</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 4px 14px rgba(5,150,105,0.3)" onclick="syncFromMealPlanner()" title="Import active Weekly Meal Planner list">
+        📅 Load Meal Planner List
+      </button>
+      <button class="btn alt" style="background:#fee2e2;color:#b91c1c;border-color:#fecaca" onclick="clearAllItems()" title="Delete all items from your checklist">🗑 Clear All Items</button>
+      <button class="btn alt" onclick="clearPurchased()">✓ Clear Completed</button>
+      <button class="btn" onclick="window.print()">🖨 Print List</button>
+    </div>
+  </div>
+
+  <!-- Meal Planner Sync Banner -->
+  <div id="mealPlanBanner" style="display:none;margin-bottom:20px;padding:14px 18px;background:var(--panel-alt);border:1px solid var(--primary);border-radius:14px;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:26px">📅</span>
+      <div>
+        <strong style="color:var(--text);font-size:1rem;display:block">Weekly Meal Plan Available! (மீல் பிளானர் பட்டியல் உள்ளது)</strong>
+        <span id="mealPlanBannerText" style="color:var(--muted);font-size:0.86rem">Your scheduled meals have ingredients ready to buy. Set your shopping list to only your planned meals.</span>
+      </div>
+    </div>
+    <button class="btn small" style="background:linear-gradient(135deg,#059669,#047857);color:#fff" onclick="syncFromMealPlanner()">
+      ⚡ Load Meal Plan Ingredients Only
+    </button>
+  </div>
+
+  <div class="two">
+    <!-- Form to Add Items -->
+    <div class="panel">
+      <h3 style="margin-bottom:6px">➕ Add Ingredient to List</h3>
+      <p class="muted" style="font-size:0.86rem;margin-bottom:16px">Enter custom ingredients or pantry items to buy.</p>
+
+      <form id="addForm">
+        <label>Ingredient Name *
+          <input id="name" placeholder="e.g. Small Shallots, Toor Dal, Ghee, Milk" required>
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0">
+          <label>Quantity
+            <input id="quantity" placeholder="e.g. 500, 2, 1/2">
+          </label>
+          <label>Unit
+            <input id="unit" placeholder="e.g. grams, tbsp, cups, kg">
+          </label>
+        </div>
+        <label>Dish / Menu Name (Optional - டிஷ் பெயர்)
+          <input id="dishNameInput" placeholder="e.g. Mutton Sukka, Biryani, Pizza (Optional)">
+        </label>
+        <label style="margin-top:10px;display:block">Category
+          <select id="category">
+            <option value="Vegetables">Vegetables (காய்கறிகள்)</option>
+            <option value="Spices">Spices (மசாலா)</option>
+            <option value="Grains & Dal">Grains & Dal (பருப்பு/தானியம்)</option>
+            <option value="Dairy & Oils">Dairy & Oils (பால்/நெய்/எண்ணெய்)</option>
+            <option value="Meat & Poultry">Meat & Poultry (அசைவம்)</option>
+            <option value="Other">Other Grocery</option>
+          </select>
+        </label>
+        <button class="btn" style="margin-top:14px;width:100%">+ Add Ingredient</button>
+      </form>
+      <div id="addNotice" style="margin-top:10px;font-size:0.88rem;font-weight:700"></div>
+    </div>
+
+    <!-- Active Shopping Items List with Dish Filter -->
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0">🛒 Your Active Checklist</h3>
+        <span id="itemCount" class="pill" style="font-size:11px">0 items</span>
+      </div>
+
+      <!-- Dish Filter Bar (டிஷ் வாரியாக தேர்வு) -->
+      <div style="margin-bottom:16px;padding:12px 14px;background:var(--panel-alt);border:1px solid var(--line);border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <strong style="font-size:0.86rem;color:var(--text);display:flex;align-items:center;gap:6px">
+            🍽 <span>Filter by Dish / Menu (டிஷ் வாரியாக பார்க்க):</span>
+          </strong>
+          <span id="activeFilterLabel" style="font-size:12px;font-weight:700;color:var(--primary)">Showing All</span>
+        </div>
+        <div id="dishPills" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dish-pill active" onclick="setDishFilter('all')">🍽 All Dishes</button>
+        </div>
+      </div>
+
+      <!-- List Container -->
+      <div id="list" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+  </div>
+</main>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+let localGuestList = [];
+let allShoppingItems = [];
+let activeDishFilter = "all";
+
+function loadGuestList() {
+  localGuestList = getGuestShoppingList();
+}
+
+function saveGuestList() {
+  saveGuestShoppingList(localGuestList);
+}
+
+function getDishEmoji(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("mutton") || n.includes("lamb") || n.includes("மட்டன்")) return "🥩";
+  if (n.includes("chicken") || n.includes("கோழி") || n.includes("சிக்கன்")) return "🍗";
+  if (n.includes("fish") || n.includes("meen") || n.includes("மீன்")) return "🐟";
+  if (n.includes("biryani") || n.includes("rice") || n.includes("பிரியாணி") || n.includes("சாதம்")) return "🍛";
+  if (n.includes("pizza") || n.includes("பீட்சா")) return "🍕";
+  if (n.includes("pasta") || n.includes("பாஸ்தா") || n.includes("noodles")) return "🍝";
+  if (n.includes("dosa") || n.includes("தோசை") || n.includes("idli")) return "🥞";
+  if (n.includes("sweet") || n.includes("jamun") || n.includes("கேசரி")) return "🍯";
+  return "🍲";
+}
+
+async function load() {
+  const box = document.getElementById("list");
+  const countBox = document.getElementById("itemCount");
+  const pillsBox = document.getElementById("dishPills");
+  const filterLabel = document.getElementById("activeFilterLabel");
+
+  if (getToken()) {
+    try {
+      allShoppingItems = await api("/users/me/shopping-list");
+      countBox.textContent = `${allShoppingItems.length} items (Cloud)`;
+    } catch (e) {
+      box.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`;
+      return;
+    }
+  } else {
+    loadGuestList();
+    allShoppingItems = localGuestList;
+    countBox.textContent = `${allShoppingItems.length} items (Offline)`;
+  }
+
+  if (!allShoppingItems.length) {
+    box.innerHTML = `<div class="panel empty" style="text-align:center;padding:30px">
+      <span style="font-size:36px;display:block;margin-bottom:10px">🛒</span>
+      <p style="font-weight:700;margin-bottom:6px">Your shopping list is currently empty!</p>
+      <p class="muted" style="font-size:0.86rem">Add ingredients using the form on the left, or open any recipe / ask ChefBot AI to add dish menus directly!</p>
+    </div>`;
+    pillsBox.innerHTML = `<button class="dish-pill active">🍽 All Dishes (0)</button>`;
+    filterLabel.textContent = "Empty";
+    return;
+  }
+
+  // Group items by dish name
+  const dishesMap = {};
+  for (const item of allShoppingItems) {
+    const dish = String(item.dish_name || item.category || "General Groceries").trim();
+    if (!dishesMap[dish]) dishesMap[dish] = [];
+    dishesMap[dish].push(item);
+  }
+
+  const uniqueDishes = Object.keys(dishesMap);
+
+  // Render Dish Filter Pills
+  pillsBox.innerHTML = `
+    <button class="dish-pill ${activeDishFilter === 'all' ? 'active' : ''}" onclick="setDishFilter('all')">
+      🍽 All Dishes (${allShoppingItems.length})
+    </button>
+    ${uniqueDishes.map(d => `
+      <button class="dish-pill ${activeDishFilter === d ? 'active' : ''}" onclick="setDishFilter('${esc(d)}')">
+        ${getDishEmoji(d)} ${esc(d)} (${dishesMap[d].length})
+      </button>
+    `).join("")}
+  `;
+
+  filterLabel.textContent = activeDishFilter === 'all' ? `Showing All (${allShoppingItems.length} items)` : `Only "${activeDishFilter}" (${dishesMap[activeDishFilter]?.length || 0} items)`;
+
+  // Filter which dishes to show
+  const dishesToRender = activeDishFilter === 'all'
+    ? uniqueDishes
+    : uniqueDishes.filter(d => d.toLowerCase() === activeDishFilter.toLowerCase());
+
+  if (!dishesToRender.length) {
+    box.innerHTML = `<p class="muted">No items found for "${esc(activeDishFilter)}". <a href="javascript:void(0)" onclick="setDishFilter('all')">Show all items</a></p>`;
+    return;
+  }
+
+  // Render Grouped Dish Cards
+  box.innerHTML = dishesToRender.map(dishName => {
+    const items = dishesMap[dishName] || [];
+    const emoji = getDishEmoji(dishName);
+
+    return `
+      <div class="dish-group-card">
+        <div class="dish-group-header">
+          <h4>
+            <span>${emoji}</span>
+            <span>${esc(dishName)}</span>
+            <span class="pill" style="font-size:11px;font-weight:800;background:var(--primary-soft);color:var(--primary)">${items.length} items</span>
+          </h4>
+          <button class="delete-dish-btn" onclick="clearDish('${esc(dishName)}')" title="Remove this dish's ingredients from shopping list">
+            🗑 Remove Dish
+          </button>
+        </div>
+        <div>
+          ${items.map(x => `
+            <div class="shopping-item-card ${x.purchased ? 'purchased' : ''}">
+              <div style="display:flex;align-items:center;gap:12px">
+                <input type="checkbox" ${x.purchased ? "checked" : ""} onchange="toggleItem(${x.id || 0}, '${esc(x.name)}', '${esc(dishName)}', this.checked)" style="width:20px;height:20px;cursor:pointer">
+                <div>
+                  <strong style="color:var(--text);font-size:0.96rem">${esc(x.name)}</strong>
+                  <small style="display:block;color:var(--muted)">${esc(x.quantity || "")} ${esc(x.unit || "")} · ${esc(x.category || "General")}</small>
+                </div>
+              </div>
+              <button class="delete-shop-btn" onclick="deleteItem(${x.id || 0}, '${esc(x.name)}', '${esc(dishName)}')" title="Delete item">
+                🗑 Delete
+              </button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function setDishFilter(filter) {
+  activeDishFilter = filter;
+  load();
+}
+
+addForm.onsubmit = async e => {
+  e.preventDefault();
+  const notice = document.getElementById("addNotice");
+  const itemName = document.getElementById("name").value.trim();
+  const qty = document.getElementById("quantity").value.trim();
+  const unitVal = document.getElementById("unit").value.trim();
+  const cat = document.getElementById("category").value;
+  const dishVal = document.getElementById("dishNameInput").value.trim();
+
+  if (!itemName) return;
+
+  try {
+    const finalDish = dishVal || "Custom Grocery";
+    await addItemsToShoppingList({
+      name: itemName,
+      quantity: qty,
+      unit: unitVal,
+      category: cat,
+      dish_name: finalDish
+    }, finalDish);
+
+    notice.style.color = "var(--success)";
+    notice.textContent = `✅ Added "${itemName}" to ${finalDish}!`;
+    showToast(`🛒 Added "${itemName}" to ${finalDish}!`, "success");
+    addForm.reset();
+    activeDishFilter = finalDish;
+    await load();
+    setTimeout(() => { notice.textContent = ""; }, 3000);
+  } catch (err) {
+    notice.style.color = "var(--danger)";
+    notice.textContent = "Error: " + err.message;
+    showToast(err.message, "error");
+  }
+};
+
+async function toggleItem(id, name, dishName, purchased) {
+  if (getToken() && id) {
+    try {
+      await api("/users/me/shopping-list/" + id, {
+        method: "PATCH",
+        body: JSON.stringify({ purchased })
+      });
+      await load();
+      updateNavShoppingBadge();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  } else {
+    loadGuestList();
+    const item = localGuestList.find(x =>
+      x.name.toLowerCase() === name.toLowerCase() &&
+      (x.dish_name || x.category || "").toLowerCase() === dishName.toLowerCase()
+    );
+    if (item) {
+      item.purchased = purchased;
+      saveGuestList();
+      load();
+    }
+  }
+}
+
+async function deleteItem(id, name, dishName) {
+  if (getToken() && id) {
+    try {
+      await api("/users/me/shopping-list/" + id, { method: "DELETE" });
+      await load();
+      updateNavShoppingBadge();
+      showToast(`Deleted "${name}"`, "info");
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  } else {
+    loadGuestList();
+    const idx = localGuestList.findIndex(x =>
+      x.name.toLowerCase() === name.toLowerCase() &&
+      (x.dish_name || x.category || "").toLowerCase() === dishName.toLowerCase()
+    );
+    if (idx !== -1) {
+      localGuestList.splice(idx, 1);
+      saveGuestList();
+      load();
+      showToast(`Deleted "${name}"`, "info");
+    }
+  }
+}
+
+async function clearDish(dishName) {
+  if (!confirm(`Are you sure you want to remove all ingredients for "${dishName}"?`)) return;
+
+  if (getToken()) {
+    try {
+      await api("/users/me/shopping-list?dish=" + encodeURIComponent(dishName), { method: "DELETE" });
+      showToast(`Removed all ingredients for "${dishName}"`, "info");
+      if (activeDishFilter.toLowerCase() === dishName.toLowerCase()) {
+        activeDishFilter = "all";
+      }
+      await load();
+      updateNavShoppingBadge();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  } else {
+    loadGuestList();
+    localGuestList = localGuestList.filter(x =>
+      (x.dish_name || x.category || "").toLowerCase() !== dishName.toLowerCase()
+    );
+    saveGuestList();
+    showToast(`Removed all ingredients for "${dishName}"`, "info");
+    if (activeDishFilter.toLowerCase() === dishName.toLowerCase()) {
+      activeDishFilter = "all";
+    }
+    load();
+  }
+}
+
+async function clearAllItems() {
+  if (!confirm("Are you sure you want to clear your ENTIRE shopping list?")) return;
+
+  if (getToken()) {
+    try {
+      await api("/users/me/shopping-list", { method: "DELETE" });
+      showToast("Cleared entire shopping list!", "info");
+      activeDishFilter = "all";
+      await load();
+      updateNavShoppingBadge();
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  } else {
+    localGuestList = [];
+    saveGuestList();
+    showToast("Cleared entire shopping list!", "info");
+    activeDishFilter = "all";
+    load();
+  }
+}
+
+async function clearPurchased() {
+  if (getToken()) {
+    try {
+      const rows = await api("/users/me/shopping-list");
+      const purchased = rows.filter(r => r.purchased);
+      for (const r of purchased) {
+        await api("/users/me/shopping-list/" + r.id, { method: "DELETE" });
+      }
+      await load();
+      updateNavShoppingBadge();
+      showToast(`Cleared ${purchased.length} completed items!`, "info");
+    } catch (e) {
+      showToast(e.message, "error");
+    }
+  } else {
+    loadGuestList();
+    const count = localGuestList.filter(x => x.purchased).length;
+    localGuestList = localGuestList.filter(x => !x.purchased);
+    saveGuestList();
+    load();
+    showToast(`Cleared ${count} completed items!`, "info");
+  }
+}
+
+// Sync active Meal Planner list directly into Shopping List (replaces random items!)
+async function syncFromMealPlanner() {
+  const isTa = lang() === "ta";
+  let plan = {};
+  let excluded = [];
+  let custom = [];
+
+  try {
+    plan = JSON.parse(localStorage.getItem("cookshare_weekly_plan")) || {};
+    excluded = JSON.parse(localStorage.getItem("cookshare_excluded_ings")) || [];
+    custom = JSON.parse(localStorage.getItem("cookshare_custom_grocery")) || [];
+  } catch (e) {}
+
+  const mealCount = Object.keys(plan).filter(k => plan[k]).length;
+  if (!mealCount && !custom.length) {
+    if (confirm(isTa ? "மீல் பிளானரில் இன்னும் உணவுகள் சேர்க்கப்படவில்லை. மீல் பிளானரை திறந்து உணவுகளை சேர்க்கவா?" : "No meals planned in your Meal Planner yet. Open Meal Planner to schedule your meals?")) {
+      location.href = "planner.html";
+    }
+    return;
+  }
+
+  try {
+    if (getToken()) {
+      const res = await api("/users/me/meal-plan/sync-to-shopping", {
+        method: "POST",
+        body: JSON.stringify({
+          plan,
+          replace: true,
+          excluded,
+          customItems: custom
+        })
+      });
+      showToast(isTa ? `✅ மீல் பிளானர் பொருட்கள் (${res.count}) ஷாப்பிங் பட்டியலில் வைக்கப்பட்டது!` : `✅ Shopping List set to your Meal Planner (${res.count} ingredients)!`, "success");
+    } else {
+      // Guest offline mode
+      const allRecipes = await api("/recipes/planner/recipes-with-ingredients");
+      const itemsToSync = [];
+      const processed = new Set();
+      const excludedNorm = excluded.map(e => String(e).toLowerCase().trim());
+
+      for (const k of Object.keys(plan)) {
+        const recipeId = plan[k];
+        const r = allRecipes.find(x => x.id === recipeId);
+        if (!r || !r.ingredients) continue;
+        for (const ing of r.ingredients) {
+          const normKey = (ing.name || "").trim().toLowerCase();
+          if (!normKey || excludedNorm.includes(normKey) || processed.has(normKey)) continue;
+          processed.add(normKey);
+          itemsToSync.push({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            name: isTa ? (ing.name_ta || ing.name) : ing.name,
+            quantity: ing.quantity || "",
+            unit: (isTa ? ing.unit_ta : ing.unit) || ing.unit || "",
+            category: "📅 Weekly Meal Plan",
+            dish_name: "📅 Weekly Meal Plan",
+            purchased: false
+          });
+        }
+      }
+
+      for (const c of custom) {
+        const normKey = c.name.trim().toLowerCase();
+        if (!normKey || excludedNorm.includes(normKey) || processed.has(normKey)) continue;
+        processed.add(normKey);
+        itemsToSync.push({
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          name: c.name,
+          quantity: c.quantity || "",
+          unit: c.unit || "",
+          category: "📅 Weekly Meal Plan",
+          dish_name: "📅 Weekly Meal Plan",
+          purchased: false
+        });
+      }
+
+      saveGuestShoppingList(itemsToSync);
+      showToast(isTa ? `✅ மீல் பிளானர் பொருட்கள் (${itemsToSync.length}) வைக்கப்பட்டன!` : `✅ Set Shopping List to ${itemsToSync.length} Meal Plan ingredients!`, "success");
+    }
+
+    activeDishFilter = "📅 Weekly Meal Plan";
+    await load();
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+function checkMealPlanBanner() {
+  const banner = document.getElementById("mealPlanBanner");
+  const bannerText = document.getElementById("mealPlanBannerText");
+  if (!banner) return;
+
+  try {
+    const plan = JSON.parse(localStorage.getItem("cookshare_weekly_plan")) || {};
+    const count = Object.keys(plan).filter(k => plan[k]).length;
+    if (count > 0) {
+      banner.style.display = "flex";
+      if (bannerText) {
+        bannerText.textContent = lang() === "ta"
+          ? `உங்களிடம் ${count} திட்டமிடப்பட்ட உணவுகள் உள்ளன. மீல் பிளானர் பொருட்களை மட்டும் ஷாப்பிங் லிஸ்ட்டில் ஏற்றவும்.`
+          : `You have ${count} scheduled meals. Click to set your shopping list to only your planned meals.`;
+      }
+    } else {
+      banner.style.display = "none";
+    }
+  } catch (e) {
+    banner.style.display = "none";
+  }
+}
+
+// Check if directed from a recipe with ?recipe=ID or ?dish=NAME
+async function checkRecipeParam() {
+  const urlParams = new URLSearchParams(location.search);
+  const recId = urlParams.get("recipe");
+  const dishParam = urlParams.get("dish");
+
+  if (dishParam) {
+    activeDishFilter = dishParam;
+  }
+
+  if (recId) {
+    try {
+      const r = await api("/recipes/" + recId);
+      if (r && r.ingredients && r.ingredients.length > 0) {
+        const dishTitle = (lang() === "ta" ? (r.title_ta || r.title) : r.title);
+        const items = r.ingredients.map(i => ({
+          name: i.name,
+          quantity: i.quantity,
+          unit: i.unit,
+          category: dishTitle,
+          dish_name: dishTitle
+        }));
+        await addItemsToShoppingList(items, dishTitle);
+        activeDishFilter = dishTitle;
+        showToast(`🛒 Added ${items.length} ingredients from "${dishTitle}"!`, "success");
+        history.replaceState(null, "", "shopping.html?dish=" + encodeURIComponent(dishTitle));
+      }
+    } catch (e) {
+      console.error("Error importing recipe ingredients:", e);
+    }
+  }
+}
+
+async function initShoppingPage() {
+  loadGuestList();
+  await checkRecipeParam();
+  checkMealPlanBanner();
+  await load();
+}
+
+initShoppingPage();
+</script>
+</body>
+</html>

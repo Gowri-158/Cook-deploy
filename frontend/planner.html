@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Meal & Grocery Planner | CookShare</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .planner-section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 28px 0 16px;
+    }
+    .grocery-category-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .grocery-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .grocery-item-row:hover {
+      border-color: var(--primary-soft);
+    }
+    .grocery-item-row.excluded {
+      opacity: 0.45;
+      text-decoration: line-through;
+      background: transparent;
+    }
+    .delete-item-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #fecaca;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .delete-item-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+    [data-theme="dark"] .delete-item-btn {
+      background: #450a0a;
+      color: #fca5a5;
+      border-color: #7f1d1d;
+    }
+    [data-theme="dark"] .delete-item-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+    .restore-item-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #bbf7d0;
+      cursor: pointer;
+    }
+    .planned-meal-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+<header></header>
+
+<main>
+  <!-- Planner Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+    <div>
+      <span class="pill" data-i18n="planner">SMART MEAL & GROCERY PLANNER</span>
+      <h1 style="font-size:2.2rem;margin:8px 0 6px">Weekly Meal Planner & Grocery Generator</h1>
+      <p class="muted">
+        Select your weekly meals. CookShare automatically analyzes every recipe and creates your <b>Weekly Glossary & Grocery List</b> to buy! If you already have an item at home, simply click <b>Delete</b>.
+      </p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn alt" onclick="clearFullPlan()">🗑 Clear Plan</button>
+      <button class="btn" onclick="transferToShoppingList()">🛒 Sync to Shopping List</button>
+    </div>
+  </div>
+
+  <!-- Real-time Stats Strip -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:28px">
+    <div class="panel" style="padding:16px 20px;margin-bottom:0">
+      <small class="muted" style="font-weight:700">MEALS PLANNED</small>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--primary);margin-top:4px" id="totalMealsCount">0 Meals</div>
+    </div>
+    <div class="panel" style="padding:16px 20px;margin-bottom:0">
+      <small class="muted" style="font-weight:700">INGREDIENTS TO BUY</small>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--success);margin-top:4px" id="totalIngredientsCount">0 Items</div>
+    </div>
+    <div class="panel" style="padding:16px 20px;margin-bottom:0">
+      <small class="muted" style="font-weight:700">EXCLUDED ITEMS (DELETED)</small>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--muted);margin-top:4px" id="excludedItemsCount">0 Items</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Weekly Schedule (Monday - Sunday) -->
+  <div class="planner-section-title">
+    <div>
+      <h2>1. Plan Your Weekly Meals (Monday – Sunday)</h2>
+      <p class="muted" style="font-size:0.9rem">Select breakfast, lunch, dinner, or snack for each day.</p>
+    </div>
+  </div>
+
+  <div id="daysGrid" class="grid" style="grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:20px;margin-top:12px">
+    <div class="panel empty">Loading weekly recipes...</div>
+  </div>
+
+  <!-- SECTION 2: What Meals Have Been Added -->
+  <div class="planner-section-title" style="margin-top:36px">
+    <div>
+      <h2>2. What Meals You Have Added</h2>
+      <p class="muted" style="font-size:0.9rem">Review all planned recipes for the week.</p>
+    </div>
+  </div>
+  <div id="addedMealsContainer" class="panel" style="margin-bottom:28px">
+    <div class="panel empty" style="padding:20px">No meals planned yet. Select recipes from the schedule above!</div>
+  </div>
+
+  <!-- SECTION 3: Weekly Glossary & Ingredients to Buy with DELETE option -->
+  <div class="planner-section-title" style="margin-top:36px">
+    <div>
+      <span class="pill" style="background:#dcfce7;color:#15803d;border-color:#bbf7d0">AUTOMATIC GROCERY LIST</span>
+      <h2 style="margin-top:6px">3. Weekly Ingredients & Grocery List to Buy</h2>
+      <p class="muted" style="font-size:0.9rem">
+        Here are all ingredients needed for your weekly meals. If you already have an item at home or don't want it, click <b>🗑 Delete / வேண்டாம்</b> to remove it!
+      </p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn small alt" onclick="restoreAllExcluded()">↺ Restore All Deleted Items</button>
+    </div>
+  </div>
+
+  <!-- Add Custom Item Form -->
+  <div class="panel" style="padding:18px 24px;margin-bottom:20px;background:var(--panel-alt)">
+    <h3 style="font-size:1.05rem;margin-bottom:10px">➕ Add Custom Extra Grocery Item</h3>
+    <form id="customItemForm" onsubmit="addCustomItem(event)" style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr auto;gap:10px;align-items:center">
+      <input id="customName" placeholder="Item name (e.g. Milk, Bread, Tea powder)..." required>
+      <input id="customQty" placeholder="Quantity (e.g. 1, 500)">
+      <input id="customUnit" placeholder="Unit (e.g. liters, grams)">
+      <select id="customCat">
+        <option value="Dairy & Oils">Dairy & Oils</option>
+        <option value="Vegetables & Herbs">Vegetables & Herbs</option>
+        <option value="Spices & Masala">Spices & Masala</option>
+        <option value="Grains & Pulses">Grains & Pulses</option>
+        <option value="Other">Other Grocery</option>
+      </select>
+      <button type="submit" class="btn small">+ Add Item</button>
+    </form>
+  </div>
+
+  <div id="weeklyGroceryContainer">
+    <div class="panel empty">Select meals above to see the combined grocery list to buy!</div>
+  </div>
+</main>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+let allRecipes = [];
+let weeklyPlan = {}; // { "Monday_Breakfast": recipeId, ... }
+let customItems = []; // [ { name, quantity, unit, category, isCustom: true } ]
+let excludedIngredients = []; // [ "Salt", "Turmeric Powder", ... ]
+
+const DAYS = [
+  { key: "Monday", en: "Monday", ta: "திங்கள்" },
+  { key: "Tuesday", en: "Tuesday", ta: "செவ்வாய்" },
+  { key: "Wednesday", en: "Wednesday", ta: "புதன்" },
+  { key: "Thursday", en: "Thursday", ta: "வியாழன்" },
+  { key: "Friday", en: "Friday", ta: "வெள்ளி" },
+  { key: "Saturday", en: "Saturday", ta: "சனி" },
+  { key: "Sunday", en: "Sunday", ta: "ஞாயிறு" }
+];
+
+const MEAL_TYPES = [
+  { key: "Breakfast", en: "Breakfast", ta: "காலை உணவு", icon: "🌅" },
+  { key: "Lunch", en: "Lunch", ta: "மதிய உணவு", icon: "☀️" },
+  { key: "Dinner", en: "Dinner", ta: "இரவு உணவு", icon: "🌙" },
+  { key: "Snack", en: "Snack", ta: "சிற்றுண்டி", icon: "☕" }
+];
+
+// Load persisted state
+function loadPersistedState() {
+  try {
+    weeklyPlan = JSON.parse(localStorage.getItem("cookshare_weekly_plan")) || {};
+    excludedIngredients = JSON.parse(localStorage.getItem("cookshare_excluded_ings")) || [];
+    customItems = JSON.parse(localStorage.getItem("cookshare_custom_grocery")) || [];
+  } catch (e) {
+    weeklyPlan = {};
+    excludedIngredients = [];
+    customItems = [];
+  }
+}
+
+function saveState() {
+  localStorage.setItem("cookshare_weekly_plan", JSON.stringify(weeklyPlan));
+  localStorage.setItem("cookshare_excluded_ings", JSON.stringify(excludedIngredients));
+  localStorage.setItem("cookshare_custom_grocery", JSON.stringify(customItems));
+}
+
+async function initPlanner() {
+  loadPersistedState();
+  const box = document.getElementById("daysGrid");
+
+  try {
+    allRecipes = await api("/recipes/planner/recipes-with-ingredients");
+    renderSchedule();
+    renderAddedMeals();
+    renderGroceryList();
+  } catch (err) {
+    box.innerHTML = `<div class="panel empty" style="color:var(--danger)">Error loading recipes: ${esc(err.message)}</div>`;
+  }
+}
+
+function renderSchedule() {
+  const box = document.getElementById("daysGrid");
+  const isTa = lang() === "ta";
+
+  box.innerHTML = DAYS.map(day => `
+    <div class="panel" style="margin-bottom:0;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="color:var(--primary);font-size:1.15rem">📅 ${isTa ? day.ta : day.en}</h3>
+        <span class="pill" style="font-size:10px">${isTa ? day.en : day.ta}</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;flex:1">
+        ${MEAL_TYPES.map(meal => {
+          const slotKey = `${day.key}_${meal.key}`;
+          const currentVal = weeklyPlan[slotKey] || "";
+          return `
+            <div>
+              <label style="font-size:0.84rem;margin-bottom:4px;display:flex;align-items:center;gap:6px">
+                <span>${meal.icon}</span> <b>${isTa ? meal.ta : meal.en}</b>
+              </label>
+              <select onchange="onMealSelect('${slotKey}', this.value)" style="padding:8px 10px;font-size:0.86rem">
+                <option value="">-- Choose Recipe --</option>
+                ${allRecipes.map(r => `
+                  <option value="${r.id}" ${String(r.id) === String(currentVal) ? "selected" : ""}>
+                    ${esc(isTa ? (r.title_ta || r.title) : r.title)} (${r.prep_minutes + r.cook_minutes}m)
+                  </option>
+                `).join("")}
+              </select>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+
+function onMealSelect(slotKey, recipeId) {
+  if (recipeId) {
+    weeklyPlan[slotKey] = Number(recipeId);
+  } else {
+    delete weeklyPlan[slotKey];
+  }
+  saveState();
+  renderAddedMeals();
+  renderGroceryList();
+}
+
+function removeMeal(slotKey) {
+  delete weeklyPlan[slotKey];
+  saveState();
+  renderSchedule();
+  renderAddedMeals();
+  renderGroceryList();
+}
+
+// Render "What meals have been added"
+function renderAddedMeals() {
+  const container = document.getElementById("addedMealsContainer");
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+  const isTa = lang() === "ta";
+
+  document.getElementById("totalMealsCount").textContent = `${plannedKeys.length} Meals`;
+
+  if (!plannedKeys.length) {
+    container.innerHTML = `<div class="panel empty" style="padding:24px;border:none">No meals added yet. Choose dishes from the schedule above!</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px">
+      ${plannedKeys.map(k => {
+        const [dayKey, mealKey] = k.split("_");
+        const recipeId = weeklyPlan[k];
+        const r = allRecipes.find(x => x.id === recipeId);
+        if (!r) return "";
+
+        const dayObj = DAYS.find(d => d.key === dayKey);
+        const mealObj = MEAL_TYPES.find(m => m.key === mealKey);
+        const title = isTa ? (r.title_ta || r.title) : r.title;
+
+        return `
+          <div style="background:var(--panel-alt);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              <img src="${esc(r.image_url || 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=300&q=80')}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;flex-shrink:0">
+              <div style="min-width:0">
+                <span class="pill" style="font-size:10px;padding:2px 8px">${mealObj ? mealObj.icon : ""} ${dayObj ? (isTa ? dayObj.ta : dayObj.en) : dayKey} · ${mealObj ? (isTa ? mealObj.ta : mealObj.en) : mealKey}</span>
+                <a href="recipe.html?id=${r.id}" style="font-weight:700;color:var(--text);display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(title)}</a>
+              </div>
+            </div>
+            <button class="delete-item-btn" onclick="removeMeal('${k}')" title="Remove this meal">✕</button>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+// Categorize ingredient into a readable grocery group
+function getIngredientCategory(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("peppercorn") || n.includes("pepper") || n.includes("chili") || n.includes("cumin") || n.includes("fennel") || n.includes("mustard") || n.includes("fenugreek") || n.includes("turmeric") || n.includes("cardamom") || n.includes("clove") || n.includes("cinnamon") || n.includes("coriander seed") || n.includes("masala") || n.includes("asafoetida") || n.includes("hing")) {
+    return "🌶 Spices & Masala (மசாலா பொருட்கள்)";
+  }
+  if (n.includes("rice") || n.includes("dal") || n.includes("millet") || n.includes("kambu") || n.includes("ragi") || n.includes("batter") || n.includes("flour") || n.includes("rava") || n.includes("chickpea") || n.includes("peas")) {
+    return "🌾 Grains, Pulses & Dal (பருப்பு & தானியங்கள்)";
+  }
+  if (n.includes("onion") || n.includes("shallot") || n.includes("tomato") || n.includes("drumstick") || n.includes("potato") || n.includes("curry leaves") || n.includes("ginger") || n.includes("garlic") || n.includes("coriander") || n.includes("mint") || n.includes("green chili")) {
+    return "🥦 Vegetables & Aromatics (காய்கறிகள் & மூலிகைகள்)";
+  }
+  if (n.includes("chicken") || n.includes("mutton") || n.includes("fish") || n.includes("egg") || n.includes("prawn")) {
+    return "🥩 Meat & Poultry (அசைவ பொருட்கள்)";
+  }
+  if (n.includes("ghee") || n.includes("butter") || n.includes("milk") || n.includes("curd") || n.includes("paneer") || n.includes("oil") || n.includes("cream")) {
+    return "🥛 Dairy & Cooking Oils (பால், நெய் & எண்ணெய்கள்)";
+  }
+  return "🏷 Other Grocery Items (இதர பொருட்கள்)";
+}
+
+// Compile weekly grocery list
+function renderGroceryList() {
+  const container = document.getElementById("weeklyGroceryContainer");
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+  const isTa = lang() === "ta";
+
+  if (!plannedKeys.length && !customItems.length) {
+    container.innerHTML = `<div class="panel empty">No meals planned yet. Select dishes above to generate your weekly shopping glossary!</div>`;
+    document.getElementById("totalIngredientsCount").textContent = "0 Items";
+    document.getElementById("excludedItemsCount").textContent = `${excludedIngredients.length} Items`;
+    return;
+  }
+
+  // Aggregate all ingredients
+  const aggregated = {}; // key = normalized name => { name, name_ta, totalQty, unit, category, recipes: [] }
+
+  for (const k of plannedKeys) {
+    const recipeId = weeklyPlan[k];
+    const r = allRecipes.find(x => x.id === recipeId);
+    if (!r || !r.ingredients) continue;
+
+    for (const ing of r.ingredients) {
+      const normKey = (ing.name || "").trim().toLowerCase();
+      if (!normKey) continue;
+
+      if (!aggregated[normKey]) {
+        aggregated[normKey] = {
+          name: ing.name,
+          name_ta: ing.name_ta || "",
+          quantity: ing.quantity || "",
+          unit: (isTa ? ing.unit_ta : ing.unit) || ing.unit || "",
+          category: getIngredientCategory(ing.name),
+          recipes: [isTa ? (r.title_ta || r.title) : r.title]
+        };
+      } else {
+        const existing = aggregated[normKey];
+        const rTitle = isTa ? (r.title_ta || r.title) : r.title;
+        if (!existing.recipes.includes(rTitle)) {
+          existing.recipes.push(rTitle);
+        }
+        // If numeric, add up
+        const num1 = parseFloat(existing.quantity);
+        const num2 = parseFloat(ing.quantity);
+        if (!isNaN(num1) && !isNaN(num2)) {
+          existing.quantity = (num1 + num2).toString();
+        }
+      }
+    }
+  }
+
+  // Add custom items
+  for (const c of customItems) {
+    const normKey = c.name.trim().toLowerCase();
+    if (!aggregated[normKey]) {
+      aggregated[normKey] = {
+        name: c.name,
+        name_ta: "",
+        quantity: c.quantity || "",
+        unit: c.unit || "",
+        category: c.category || "🏷 Other Grocery Items (இதர பொருட்கள்)",
+        recipes: ["Custom Added"],
+        isCustom: true
+      };
+    }
+  }
+
+  const allItems = Object.values(aggregated);
+  const activeItems = allItems.filter(i => !excludedIngredients.includes(i.name.toLowerCase()));
+
+  document.getElementById("totalIngredientsCount").textContent = `${activeItems.length} to Buy`;
+  document.getElementById("excludedItemsCount").textContent = `${excludedIngredients.length} Excluded`;
+
+  // Group by category
+  const categories = {};
+  for (const item of allItems) {
+    if (!categories[item.category]) categories[item.category] = [];
+    categories[item.category].push(item);
+  }
+
+  const catNames = Object.keys(categories).sort();
+
+  container.innerHTML = catNames.map(cat => {
+    const itemsInCat = categories[cat];
+    return `
+      <div class="grocery-category-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3 style="font-size:1.15rem;margin:0">${cat}</h3>
+          <span class="pill" style="font-size:11px">${itemsInCat.length} items</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${itemsInCat.map(item => {
+            const isExcluded = excludedIngredients.includes(item.name.toLowerCase());
+            return `
+              <div class="grocery-item-row ${isExcluded ? 'excluded' : ''}">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="font-size:16px">${isExcluded ? '✖' : '✔'}</span>
+                  <div>
+                    <strong style="color:var(--text);font-size:0.95rem">${esc(item.name)}</strong>
+                    ${item.name_ta ? `<span style="color:var(--primary);font-weight:700;font-size:0.9rem;margin-left:6px">(${esc(item.name_ta)})</span>` : ""}
+                    ${item.quantity ? `<span class="pill" style="font-size:11px;margin-left:8px">${esc(item.quantity)} ${esc(item.unit)}</span>` : ""}
+                    <small style="display:block;color:var(--muted);font-size:0.8rem;margin-top:2px">
+                      Needed for: <i>${esc(item.recipes.join(", "))}</i>
+                    </small>
+                  </div>
+                </div>
+
+                <div>
+                  ${isExcluded ? `
+                    <button class="restore-item-btn" onclick="restoreIngredient('${esc(item.name.toLowerCase())}')">
+                      ↩ Restore / சேர்
+                    </button>
+                  ` : `
+                    <button class="delete-item-btn" onclick="excludeIngredient('${esc(item.name.toLowerCase())}')" title="Delete if you already have this at home">
+                      🗑 Delete / வேண்டாம்
+                    </button>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// User clicks Delete on an ingredient ("user vendam na delete option vaii")
+function excludeIngredient(nameKey) {
+  if (!excludedIngredients.includes(nameKey)) {
+    excludedIngredients.push(nameKey);
+    saveState();
+    renderGroceryList();
+  }
+}
+
+// Restore single ingredient
+function restoreIngredient(nameKey) {
+  excludedIngredients = excludedIngredients.filter(k => k !== nameKey);
+  saveState();
+  renderGroceryList();
+}
+
+// Restore all excluded
+function restoreAllExcluded() {
+  excludedIngredients = [];
+  saveState();
+  renderGroceryList();
+  alert("Restored all deleted ingredients back to the buy list!");
+}
+
+// Add custom grocery item
+function addCustomItem(e) {
+  e.preventDefault();
+  const name = document.getElementById("customName").value.trim();
+  const quantity = document.getElementById("customQty").value.trim();
+  const unit = document.getElementById("customUnit").value.trim();
+  const category = document.getElementById("customCat").value;
+
+  if (!name) return;
+
+  customItems.push({ name, quantity, unit, category, isCustom: true });
+  saveState();
+  document.getElementById("customItemForm").reset();
+  renderGroceryList();
+  alert(`Added "${name}" to your grocery list!`);
+}
+
+// Clear full weekly plan
+function clearFullPlan() {
+  if (confirm("Clear all planned meals for the week?")) {
+    weeklyPlan = {};
+    saveState();
+    renderSchedule();
+    renderAddedMeals();
+    renderGroceryList();
+  }
+}
+
+// Transfer active ingredients directly into Shopping List
+async function transferToShoppingList() {
+  const isTa = lang() === "ta";
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+
+  if (!plannedKeys.length && !customItems.length) {
+    alert(isTa ? "முதலில் ஏதேனும் ஒரு உணவைத் திட்டமிடுங்கள்!" : "Please plan at least one meal or add a grocery item first!");
+    return;
+  }
+
+  // Gather active items
+  const itemsToSync = [];
+  const processed = new Set();
+
+  for (const k of plannedKeys) {
+    const r = allRecipes.find(x => x.id === weeklyPlan[k]);
+    if (!r || !r.ingredients) continue;
+    for (const ing of r.ingredients) {
+      const normKey = (ing.name || "").trim().toLowerCase();
+      if (!normKey || excludedIngredients.includes(normKey) || processed.has(normKey)) continue;
+      processed.add(normKey);
+      itemsToSync.push({
+        name: isTa ? (ing.name_ta || ing.name) : ing.name,
+        quantity: ing.quantity || "",
+        unit: (isTa ? ing.unit_ta : ing.unit) || ing.unit || "",
+        category: getIngredientCategory(ing.name),
+        dish_name: "📅 Weekly Meal Plan"
+      });
+    }
+  }
+
+  for (const c of customItems) {
+    const normKey = c.name.trim().toLowerCase();
+    if (!normKey || excludedIngredients.includes(normKey) || processed.has(normKey)) continue;
+    processed.add(normKey);
+    itemsToSync.push({
+      name: c.name,
+      quantity: c.quantity || "",
+      unit: c.unit || "",
+      category: c.category || "Grocery",
+      dish_name: "📅 Weekly Meal Plan"
+    });
+  }
+
+  if (!itemsToSync.length) {
+    alert(isTa ? "அனைத்து பொருட்களும் விலக்கப்பட்டுள்ளன!" : "All ingredients have been excluded or deleted! Restore items to transfer.");
+    return;
+  }
+
+  // Set Shopping List to Meal Plan (replaces old/random items so only the Meal Plan items exist!)
+  try {
+    if (getToken()) {
+      await api("/users/me/meal-plan/sync-to-shopping", {
+        method: "POST",
+        body: JSON.stringify({
+          plan: weeklyPlan,
+          replace: true,
+          excluded: excludedIngredients,
+          customItems,
+          items: itemsToSync
+        })
+      });
+    } else {
+      // Guest mode
+      saveGuestShoppingList(itemsToSync.map((item, idx) => ({
+        id: Date.now() + idx,
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        category: item.category,
+        dish_name: "📅 Weekly Meal Plan",
+        purchased: false
+      })));
+    }
+
+    showToast(
+      isTa
+        ? `🛒 ${itemsToSync.length} மீல் பிளானர் பொருட்கள் ஷாப்பிங் பட்டியலில் வைக்கப்பட்டன!`
+        : `🛒 Set Shopping List to your ${itemsToSync.length} Meal Plan ingredients!`,
+      "success"
+    );
+
+    // Navigate to shopping list filtered by Weekly Meal Plan
+    setTimeout(() => {
+      location.href = "shopping.html?dish=" + encodeURIComponent("📅 Weekly Meal Plan");
+    }, 400);
+
+  } catch (e) {
+    showToast(e.message, "error");
+  }
+}
+
+initPlanner();
+</script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Recipes | CookShare</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header></header>
+
+<main>
+  <div style="margin-bottom:20px">
+    <span class="pill" data-i18n="explore">SMART RECIPE EXPLORER</span>
+    <h1 style="font-size:2.2rem;margin:8px 0 6px">Discover & Explore Recipes</h1>
+    <p class="muted">Search with English <b>or Tamil words</b>. Filter by recipe categories, cuisine, difficulty level, and dietary preferences.</p>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="toolbar" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:14px">
+    <input id="q" placeholder="Search recipe / ingredient / தமிழ் (e.g. Sambar, Biryani, சிக்கன், தோசை)..." aria-label="Search" style="grid-column:1 / -1" onkeydown="if(event.key==='Enter') searchRecipes()" oninput="debouncedSearch()">
+    
+    <select id="category" onchange="searchRecipes()">
+      <option value="">All Categories (Meals)</option>
+      <option value="Breakfast">🍳 Breakfast</option>
+      <option value="Lunch">🍛 Lunch</option>
+      <option value="Dinner">🍽 Dinner</option>
+    </select>
+
+    <select id="diet" onchange="searchRecipes()">
+      <option value="">All Diets</option>
+      <option value="Vegetarian">🥗 Vegetarian</option>
+      <option value="Non-Veg">🍗 Non-Veg</option>
+      <option value="High-Protein">💪 High Protein</option>
+      <option value="Gluten-Free">🌾 Gluten-Free</option>
+    </select>
+
+    <select id="cuisine" onchange="searchRecipes()">
+      <option value="">All Cuisines</option>
+      <option value="South Indian">South Indian</option>
+      <option value="Chettinad">Chettinad</option>
+      <option value="Tamil Traditional">Tamil Traditional</option>
+      <option value="Tamil Rural">Tamil Rural</option>
+      <option value="North Indian">North Indian</option>
+      <option value="Mughlai / Tamil">Mughlai / Tamil</option>
+    </select>
+
+    <select id="difficulty" onchange="searchRecipes()">
+      <option value="">All Difficulties</option>
+      <option value="Easy">Easy</option>
+      <option value="Medium">Medium</option>
+      <option value="Hard">Hard</option>
+    </select>
+
+    <button class="btn" onclick="searchRecipes()" style="white-space:nowrap">🔍 Search</button>
+  </div>
+
+  <!-- Quick Category Pills -->
+  <div class="feature-row" style="margin-bottom:24px;overflow-x:auto;padding-bottom:4px">
+    <span style="font-size:0.85rem;font-weight:700;color:var(--muted);align-self:center">Categories:</span>
+    <button class="btn small alt" onclick="setQuick('')">All</button>
+    <button class="btn small alt" onclick="setQuickCategory('Breakfast')">🍳 Breakfast</button>
+    <button class="btn small alt" onclick="setQuickCategory('Lunch')">🍛 Lunch</button>
+    <button class="btn small alt" onclick="setQuickCategory('Dinner')">🍽 Dinner</button>
+    <button class="btn small alt" onclick="setQuickDiet('Vegetarian')">🥗 Vegetarian</button>
+    <button class="btn small alt" onclick="setQuickDiet('Non-Veg')">🍗 Non-Veg</button>
+    <button class="btn small alt" onclick="setQuick('Chettinad')">🌶 Chettinad</button>
+    <button class="btn small alt" onclick="setQuick('Dosa')">🥞 Dosa</button>
+    <button class="btn small alt" onclick="setQuick('Biryani')">👑 Biryani</button>
+    <button class="btn small alt" onclick="setQuick('Paneer')">🧀 Paneer</button>
+    <button class="btn small alt" onclick="setQuick('Sambar')">🍲 Sambar</button>
+    <button class="btn small alt" onclick="setQuick('Koozh')">🌾 Kambu Koozh</button>
+  </div>
+
+  <div id="recipes" class="grid"></div>
+</main>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+<script>
+let searchTimeout = null;
+
+function debouncedSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(searchRecipes, 350);
+}
+
+async function searchRecipes() {
+  const p = new URLSearchParams();
+  if (q.value.trim()) p.set("q", q.value.trim());
+  if (category.value) p.set("meal_type", category.value);
+  if (diet.value) p.set("diet", diet.value);
+  if (cuisine.value) p.set("cuisine", cuisine.value);
+  if (difficulty.value) p.set("difficulty", difficulty.value);
+
+  const box = document.getElementById("recipes");
+  try {
+    const rows = await api("/recipes?" + p.toString());
+    box.innerHTML = rows.length ? rows.map(recipeCard).join("") : `<div class="panel empty">${tr("noRecipes")}</div>`;
+  } catch (e) {
+    box.innerHTML = `<div class="panel empty" style="color:var(--danger)">${esc(e.message)}</div>`;
+  }
+}
+
+function setQuick(v) {
+  q.value = v;
+  category.value = "";
+  diet.value = "";
+  cuisine.value = "";
+  difficulty.value = "";
+  searchRecipes();
+}
+
+function setQuickCategory(c) {
+  category.value = c;
+  searchRecipes();
+}
+
+function setQuickDiet(d) {
+  diet.value = d;
+  searchRecipes();
+}
+
+// Initialize from URL search parameters if any
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.get("q")) {
+  q.value = urlParams.get("q");
+}
+if (urlParams.get("meal_type")) {
+  category.value = urlParams.get("meal_type");
+}
+if (urlParams.get("diet")) {
+  diet.value = urlParams.get("diet");
+}
+
+searchRecipes();
+</script>
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Culinary Glossary & Ingredient Dictionary | CookShare</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .modal-hidden { display: none !important; }
+    .floating-add-btn {
+      position: fixed;
+      bottom: 96px;
+      right: 24px;
+      background: var(--panel);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      padding: 11px 18px;
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 9990;
+      transition: all 0.2s ease;
+    }
+    .floating-add-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+<header></header>
+
+<main>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+    <div>
+      <span class="pill" data-i18n="glossary">CULINARY GLOSSARY & INGREDIENT DICTIONARY</span>
+      <h1 id="pageTitle" style="font-size:2.2rem;margin:8px 0 6px">Culinary Glossary & Ingredients</h1>
+      <p id="pageDesc" class="muted">Explore authentic Tamil and English culinary terms, spices, lentils, and traditional cooking techniques. Click any term to see details and matching recipes!</p>
+    </div>
+    <div>
+      <button class="btn" onclick="openAddModal()" style="font-size:1rem;padding:12px 20px;box-shadow:var(--shadow-sm)">
+        ✨ + Add Culinary Term
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Toolbar -->
+  <div class="glossary-search-bar">
+    <input id="glossarySearch" type="text" placeholder="Search term, Tamil name (கடுகு, சோம்பு, தாளிப்பு), or definition..." oninput="onSearchInput()">
+    <button class="btn" onclick="loadGlossary()">Search</button>
+  </div>
+
+  <!-- Category Filter Chips -->
+  <div id="categoryChips" class="category-chips">
+    <button class="category-chip active" onclick="setCategory('All', this)">All (அனைத்தும்)</button>
+    <button class="category-chip" onclick="setCategory('Spice', this)">🌶 Spices (மசாலா)</button>
+    <button class="category-chip" onclick="setCategory('Lentils & Grains', this)">🌾 Lentils & Grains (தானியங்கள்)</button>
+    <button class="category-chip" onclick="setCategory('Herbs & Aromatics', this)">🌿 Herbs & Aromatics (மணமூட்டிகள்)</button>
+    <button class="category-chip" onclick="setCategory('Dairy & Oils', this)">🥛 Dairy & Oils (பால் & நெய்)</button>
+    <button class="category-chip" onclick="setCategory('Technique', this)">🍳 Techniques (சமையல் முறைகள்)</button>
+  </div>
+
+  <!-- Alphabet Filter Bar -->
+  <div id="alphabetBar" class="alphabet-bar">
+    <span class="active" onclick="setLetter('', this)">ALL</span>
+  </div>
+
+  <!-- Glossary Items Grid -->
+  <div id="glossaryList" class="glossary-grid">
+    <div class="panel empty">Loading culinary glossary items...</div>
+  </div>
+</main>
+
+<!-- Floating Add Term Button -->
+<button class="floating-add-btn" onclick="openAddModal()" title="Add a new culinary term to the glossary">
+  <span>✍️</span> <span>+ Add Term</span>
+</button>
+
+<!-- Interactive Glossary Detail Modal -->
+<div id="detailModal" class="modal-overlay modal-hidden">
+  <div class="modal-content" style="max-width:540px">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px">📖</span>
+        <div>
+          <span id="detailCategory" class="pill" style="font-size:11px">Category</span>
+          <h2 id="detailTerm" style="margin-top:4px;font-size:1.4rem">English Term</h2>
+        </div>
+      </div>
+      <button class="icon-btn" onclick="closeDetailModal()" style="border:none;font-size:20px;padding:4px 8px">✕</button>
+    </div>
+
+    <!-- Tamil name & Pronunciation voice -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--panel-alt);border:1px solid var(--line);border-radius:14px;margin-bottom:16px">
+      <div>
+        <small class="muted" style="display:block;font-size:11px;font-weight:700">தமிழ் பெயர் (Tamil Name):</small>
+        <span id="detailTermTa" style="font-size:1.3rem;font-weight:800;color:var(--primary)">தமிழ் பெயர்</span>
+      </div>
+      <button id="pronounceBtn" class="btn small alt" onclick="pronounceCurrentTerm()" title="Listen to pronunciation">
+        🔊 Listen
+      </button>
+    </div>
+
+    <!-- Definition -->
+    <div style="margin-bottom:16px">
+      <strong style="color:var(--text);font-size:0.95rem;display:block;margin-bottom:4px">Meaning & Description:</strong>
+      <p id="detailDef" style="font-size:0.95rem;line-height:1.6;color:var(--text)"></p>
+    </div>
+
+    <!-- Kitchen Usage -->
+    <div id="detailUsageBox" style="margin-bottom:20px;padding:12px 16px;background:var(--panel-alt);border-left:4px solid var(--primary);border-radius:0 12px 12px 0">
+      <strong style="color:var(--primary-deep);font-size:0.9rem;display:block;margin-bottom:4px">🍳 Traditional Culinary Use:</strong>
+      <p id="detailExample" style="font-size:0.9rem;line-height:1.5;color:var(--text)"></p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <button id="findRecipesBtn" class="btn small" onclick="findRecipesWithTerm()">
+        🔍 Find Recipes
+      </button>
+      <button id="addToShoppingBtn" class="btn small alt" onclick="addTermToShoppingList()">
+        🛒 Add to Shopping List
+      </button>
+    </div>
+    <button class="btn small alt" style="width:100%" onclick="askChefBotAboutTerm()">
+      🤖 Ask ChefBot AI About This
+    </button>
+  </div>
+</div>
+
+<!-- Add Glossary Item Modal Dialog -->
+<div id="addModal" class="modal-overlay modal-hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>✨ + Add New Culinary Term</h2>
+      <button class="icon-btn" onclick="closeAddModal()" style="border:none;font-size:20px;padding:4px 8px">✕</button>
+    </div>
+    <form id="addGlossaryForm" onsubmit="submitGlossaryItem(event)">
+      <label>English Term / Ingredient Name *
+        <input id="termInput" placeholder="e.g. Asafoetida (Hing), Tempering, Fenugreek" required>
+      </label>
+      <label>Tamil Name (தமிழ் பெயர்)
+        <input id="termTaInput" placeholder="உதா: பெருங்காயம், தாளிப்பு, வெந்தயம்">
+      </label>
+      <label>Category
+        <select id="categoryInput">
+          <option value="Spice">Spice (மசாலா பொருட்கள்)</option>
+          <option value="Lentils & Grains">Lentils & Grains (பருப்பு & தானியங்கள்)</option>
+          <option value="Herbs & Aromatics">Herbs & Aromatics (மூலிகைகள் & காய்கள்)</option>
+          <option value="Dairy & Oils">Dairy & Oils (பால் & நெய்/எண்ணெய்)</option>
+          <option value="Technique">Technique (சமையல் முறை)</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <label>Definition & Meaning *
+        <textarea id="defInput" rows="3" placeholder="Describe the ingredient or cooking technique clearly..." required></textarea>
+      </label>
+      <label>Kitchen Usage & Practical Example
+        <textarea id="exampleInput" rows="2" placeholder="e.g. Add 1 tsp to hot ghee for tempering sambar."></textarea>
+      </label>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+        <button type="button" class="btn alt" onclick="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn">✓ Save Term</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+let currentCategory = "All";
+let currentLetter = "";
+let searchDebounce = null;
+let loadedItems = [];
+let currentActiveItem = null;
+
+// Populate A-Z alphabet bar
+function initAlphabet() {
+  const bar = document.getElementById("alphabetBar");
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  letters.forEach(l => {
+    const span = document.createElement("span");
+    span.textContent = l;
+    span.onclick = () => setLetter(l, span);
+    bar.appendChild(span);
+  });
+}
+
+function setCategory(cat, btn) {
+  currentCategory = cat;
+  document.querySelectorAll(".category-chip").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  loadGlossary();
+}
+
+function setLetter(l, elem) {
+  currentLetter = l;
+  document.querySelectorAll("#alphabetBar span").forEach(s => s.classList.remove("active"));
+  elem.classList.add("active");
+  loadGlossary();
+}
+
+function onSearchInput() {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(loadGlossary, 250);
+}
+
+async function loadGlossary() {
+  const box = document.getElementById("glossaryList");
+  const q = document.getElementById("glossarySearch").value.trim();
+
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (currentCategory && currentCategory !== "All") params.set("category", currentCategory);
+  if (currentLetter) params.set("letter", currentLetter);
+
+  try {
+    const items = await api("/glossary?" + params.toString());
+    loadedItems = items;
+
+    if (!items.length) {
+      box.innerHTML = `
+        <div class="panel empty wide" style="text-align:center;padding:40px 20px">
+          <h3>No culinary terms found matching your search.</h3>
+          <p class="muted" style="margin:10px 0 16px">Be the first to contribute this culinary term to CookShare!</p>
+          <button class="btn" onclick="openAddModal()">✨ + Add This Term</button>
+        </div>
+      `;
+      return;
+    }
+
+    const isTa = lang() === "ta";
+
+    box.innerHTML = items.map(item => `
+      <div class="glossary-card" onclick="openGlossaryDetail(${item.id})" role="button" tabindex="0">
+        <div class="glossary-card-header">
+          <div>
+            <div class="glossary-term-en">${esc(item.term)}</div>
+            ${item.term_ta ? `<div class="glossary-term-ta">${esc(item.term_ta)}</div>` : ""}
+          </div>
+          <span class="pill" style="font-size:11px">${esc(item.category || "General")}</span>
+        </div>
+        <div class="glossary-def">
+          ${esc(item.definition)}
+        </div>
+        ${item.example ? `
+          <div class="glossary-example">
+            <b>${isTa ? 'சமையல் பயன்பாடு:' : 'Usage:'}</b> ${esc(item.example)}
+          </div>
+        ` : ""}
+        <div class="glossary-click-badge">
+          <span>👉 ${isTa ? 'விவரம் & சமையல் குறிப்புகளுக்கு தட்டவும்' : 'Click to view details & recipes'}</span>
+        </div>
+      </div>
+    `).join("");
+  } catch (err) {
+    box.innerHTML = `<div class="panel empty" style="color:var(--danger)">Error: ${esc(err.message)}</div>`;
+  }
+}
+
+// Open Detail Modal
+function openGlossaryDetail(id) {
+  const item = loadedItems.find(x => x.id === id);
+  if (!item) return;
+  currentActiveItem = item;
+
+  document.getElementById("detailCategory").textContent = item.category || "Culinary";
+  document.getElementById("detailTerm").textContent = item.term;
+  document.getElementById("detailTermTa").textContent = item.term_ta || item.term;
+  document.getElementById("detailDef").textContent = item.definition;
+
+  const usageBox = document.getElementById("detailUsageBox");
+  if (item.example) {
+    usageBox.style.display = "block";
+    document.getElementById("detailExample").textContent = item.example;
+  } else {
+    usageBox.style.display = "none";
+  }
+
+  document.getElementById("detailModal").classList.remove("modal-hidden");
+}
+
+function closeDetailModal() {
+  document.getElementById("detailModal").classList.add("modal-hidden");
+}
+
+// Voice Pronunciation
+function pronounceCurrentTerm() {
+  if (!currentActiveItem || !('speechSynthesis' in window)) {
+    alert("Voice synthesis is not supported on this browser.");
+    return;
+  }
+  const isTa = lang() === "ta" && currentActiveItem.term_ta;
+  const textToSpeak = isTa ? currentActiveItem.term_ta : currentActiveItem.term;
+  const utter = new SpeechSynthesisUtterance(textToSpeak);
+  utter.lang = isTa ? "ta-IN" : "en-IN";
+  utter.rate = 0.9;
+  window.speechSynthesis.speak(utter);
+}
+
+// Find Recipes with this term
+function findRecipesWithTerm() {
+  if (!currentActiveItem) return;
+  const keyword = currentActiveItem.term.split(" ")[0].replace(/[^a-zA-Z]/g, "");
+  location.href = "explore.html?q=" + encodeURIComponent(keyword || currentActiveItem.term);
+}
+
+// Add term to shopping list
+async function addTermToShoppingList() {
+  if (!currentActiveItem) return;
+  const itemName = currentActiveItem.term;
+  const itemCategory = currentActiveItem.category || "Grocery";
+
+  try {
+    await addItemsToShoppingList({
+      name: itemName,
+      category: itemCategory,
+      quantity: "1",
+      unit: "unit"
+    });
+    showToast(
+      lang() === "ta" ? `🛒 "${itemName}" ஷாப்பிங் பட்டியலில் சேர்க்கப்பட்டது!` : `🛒 Added "${itemName}" to your Shopping List!`,
+      "success",
+      { text: lang() === "ta" ? "பட்டியல் பார்க்க ➔" : "View List ➔", url: "shopping.html" }
+    );
+  } catch (e) {
+    showToast(e.message, "error");
+  }
+}
+
+// Ask ChefBot AI
+function askChefBotAboutTerm() {
+  if (!currentActiveItem) return;
+  closeDetailModal();
+  if (typeof toggleChefBot === "function") {
+    const modal = document.getElementById("chefbot-modal");
+    if (modal && modal.classList.contains("chefbot-hidden")) {
+      toggleChefBot();
+    }
+    const input = document.getElementById("chefInput");
+    if (input) {
+      input.value = `Tell me about ${currentActiveItem.term} (${currentActiveItem.term_ta || ''}) and how to cook with it?`;
+      const form = document.getElementById("chefbotForm");
+      if (form) form.dispatchEvent(new Event("submit"));
+    }
+  }
+}
+
+function openAddModal() {
+  document.getElementById("addModal").classList.remove("modal-hidden");
+  document.getElementById("termInput").focus();
+}
+
+function closeAddModal() {
+  document.getElementById("addModal").classList.add("modal-hidden");
+  document.getElementById("addGlossaryForm").reset();
+}
+
+async function submitGlossaryItem(e) {
+  e.preventDefault();
+  const term = document.getElementById("termInput").value.trim();
+  const term_ta = document.getElementById("termTaInput").value.trim();
+  const category = document.getElementById("categoryInput").value;
+  const definition = document.getElementById("defInput").value.trim();
+  const example = document.getElementById("exampleInput").value.trim();
+
+  try {
+    const res = await api("/glossary", {
+      method: "POST",
+      body: JSON.stringify({ term, term_ta, category, definition, example })
+    });
+    alert(lang() === "ta" ? "✅ புதிய சமையல் சொல் வெற்றிகரமாக சேர்க்கப்பட்டது!" : "✅ New culinary term added successfully!");
+    closeAddModal();
+    loadGlossary();
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+
+// Close modals on escape or background click
+window.onclick = function(e) {
+  const addModal = document.getElementById("addModal");
+  const detailModal = document.getElementById("detailModal");
+  if (e.target === addModal) closeAddModal();
+  if (e.target === detailModal) closeDetailModal();
+};
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closeAddModal();
+    closeDetailModal();
+  }
+});
+
+// Check if URL has ?add=1
+if (new URLSearchParams(location.search).get("add") === "1") {
+  setTimeout(openAddModal, 300);
+}
+
+initAlphabet();
+loadGlossary();
+</script>
+</body>
+</html>

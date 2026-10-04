@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CookShare — Authentic Bilingual Recipe Platform with Step-by-Step YouTube Videos, AI Chef Assistant, and Culinary Glossary in English and தமிழ்.">
+  <title>CookShare | Discover, Cook & Share Recipes</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header></header>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero-layout">
+    <div class="hero-copy">
+      <span class="pill" data-i18n="tagline">BILINGUAL • YOUTUBE VIDEOS • CHEFBOT AI</span>
+      <h1 id="heroHeadline">Discover.<br>Cook. <span>Share.</span></h1>
+      <p id="heroSubtitle">
+        Find authentic heritage and modern recipes in English and தமிழ், watch step-by-step YouTube cooking tutorials, explore our culinary glossary, and get instant cooking advice from ChefBot AI.
+      </p>
+      <div class="action-row">
+        <a class="btn" href="explore.html">🔍 <span data-i18n="explore">Explore Recipes</span></a>
+        <button class="btn alt" onclick="toggleChefBot()">🤖 <span data-i18n="askChefBot">Ask ChefBot AI</span></button>
+        <a class="btn alt" href="glossary.html">📖 <span data-i18n="glossary">Culinary Glossary</span></a>
+      </div>
+      <div class="mini-stats">
+        <div><strong>28k+</strong><span>Monthly cooks</span></div>
+        <div><strong>4.9/5</strong><span>Average rating</span></div>
+        <div><strong>100%</strong><span>Authentic recipes</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80" alt="CookShare featured dishes">
+    </div>
+  </section>
+
+  <!-- Quick Search Bar -->
+  <div class="panel" style="padding:20px 28px;margin-bottom:32px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <input id="homeSearch" type="text" placeholder="Search recipe by name, ingredient, or தமிழ் (e.g. Biryani, Dosa, சாம்பார், சிக்கன்)..." style="flex:1;min-width:240px" onkeydown="if(event.key==='Enter') searchHome()">
+      <button class="btn" onclick="searchHome()">Search</button>
+    </div>
+    <div class="feature-row" style="margin:14px 0 0">
+      <span style="font-size:0.85rem;font-weight:700;color:var(--muted);align-self:center">Quick picks:</span>
+      <button class="btn small alt" onclick="quickFilter('Chicken')">🍗 Chicken</button>
+      <button class="btn small alt" onclick="quickFilter('Dosa')">🥞 Dosa</button>
+      <button class="btn small alt" onclick="quickFilter('Biryani')">🍛 Biryani</button>
+      <button class="btn small alt" onclick="quickFilter('Paneer')">🧀 Paneer</button>
+      <button class="btn small alt" onclick="quickFilter('Sambar')">🍲 Sambar</button>
+      <button class="btn small alt" onclick="quickFilter('Millet')">🌾 Millets</button>
+      <button class="btn small alt" onclick="quickFilter('தமிழ்')">🌐 தமிழ் தேடல்</button>
+    </div>
+  </div>
+
+  <!-- Recipe Categories Section -->
+  <section style="margin-bottom:36px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px">
+      <div>
+        <span class="pill">CURATED COLLECTIONS</span>
+        <h2 style="margin-top:6px">Recipe Categories</h2>
+      </div>
+      <a class="btn small alt" href="explore.html">Browse all categories →</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px">
+      <a href="explore.html?meal_type=Breakfast" style="text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);transition:all 0.2s ease">
+        <span style="font-size:28px">🍳</span>
+        <div>
+          <strong style="color:var(--text);display:block;font-size:1rem">Breakfast</strong>
+          <small style="color:var(--muted)">Dosa, Kambu Koozh</small>
+        </div>
+      </a>
+      <a href="explore.html?meal_type=Lunch" style="text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);transition:all 0.2s ease">
+        <span style="font-size:28px">🍛</span>
+        <div>
+          <strong style="color:var(--text);display:block;font-size:1rem">Lunch</strong>
+          <small style="color:var(--muted)">Ambur Biryani, Sambar</small>
+        </div>
+      </a>
+      <a href="explore.html?meal_type=Dinner" style="text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);transition:all 0.2s ease">
+        <span style="font-size:28px">🍽</span>
+        <div>
+          <strong style="color:var(--text);display:block;font-size:1rem">Dinner</strong>
+          <small style="color:var(--muted)">Chettinad, Shahi Paneer</small>
+        </div>
+      </a>
+      <a href="explore.html?diet=Vegetarian" style="text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);transition:all 0.2s ease">
+        <span style="font-size:28px">🥗</span>
+        <div>
+          <strong style="color:var(--text);display:block;font-size:1rem">Vegetarian</strong>
+          <small style="color:var(--muted)">100% Veg Delights</small>
+        </div>
+      </a>
+      <a href="explore.html?diet=Non-Veg" style="text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);transition:all 0.2s ease">
+        <span style="font-size:28px">🍗</span>
+        <div>
+          <strong style="color:var(--text);display:block;font-size:1rem">Non-Veg</strong>
+          <small style="color:var(--muted)">Chicken & Mutton</small>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Featured Recipes Section -->
+  <section style="margin-bottom:40px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px">
+      <div>
+        <span class="pill">CHEF PICKS</span>
+        <h2 style="margin-top:6px" data-i18n="featured">Featured Recipes</h2>
+      </div>
+      <a class="btn small alt" href="explore.html">View all recipes →</a>
+    </div>
+    <div id="recipes" class="grid">
+      <div class="panel empty">Loading delicious recipes...</div>
+    </div>
+  </section>
+
+  <!-- Culinary Glossary Strip -->
+  <section class="panel" style="margin-bottom:40px;background:var(--panel-alt)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <span class="pill">TAMIL & ENGLISH INGREDIENT DICTIONARY</span>
+        <h2 style="margin-top:6px" data-i18n="glossary">Culinary Glossary & Spice Guide</h2>
+        <p class="muted">Demystifying traditional spices, lentils, and cooking techniques in English and தமிழ்.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn small alt" href="glossary.html?add=1">✨ + Add Term</a>
+        <a class="btn small" href="glossary.html">Explore 30+ Terms →</a>
+      </div>
+    </div>
+    <div id="homeGlossaryPreview" class="grid" style="grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px">
+      <!-- Populated via script -->
+    </div>
+  </section>
+
+  <!-- Recently Viewed Section -->
+  <section id="recentSection" class="panel" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 data-i18n="recent">Recently Viewed Recipes</h3>
+      <span class="pill" style="font-size:11px">Synced</span>
+    </div>
+    <div id="recent"></div>
+  </section>
+</main>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+<script>
+function searchHome() {
+  const q = document.getElementById("homeSearch").value.trim();
+  location.href = "explore.html" + (q ? "?q=" + encodeURIComponent(q) : "");
+}
+
+function quickFilter(term) {
+  location.href = "explore.html?q=" + encodeURIComponent(term);
+}
+
+// Load Home Glossary Strip
+async function loadGlossaryPreview() {
+  const box = document.getElementById("homeGlossaryPreview");
+  if (!box) return;
+  try {
+    const items = await api("/glossary");
+    const preview = items.slice(0, 4);
+    box.innerHTML = preview.map(item => `
+      <div class="glossary-preview-card" style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform 0.2s ease,border-color 0.2s ease" onclick="location.href='glossary.html?q=' + encodeURIComponent('${esc(item.term)}')" title="Click to view term details">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <strong style="color:var(--text);font-size:1.05rem">${esc(item.term)}</strong>
+          <span class="pill" style="font-size:10px">${esc(item.category || "Spice")}</span>
+        </div>
+        ${item.term_ta ? `<div style="color:var(--primary);font-weight:700;font-size:0.95rem;margin-top:2px">${esc(item.term_ta)}</div>` : ""}
+        <p style="font-size:0.85rem;color:var(--muted);margin-top:6px;line-height:1.4">${esc(item.definition.slice(0, 90))}...</p>
+        <div style="margin-top:8px;font-size:11px;font-weight:700;color:var(--primary)">👉 Click to view details →</div>
+      </div>
+    `).join("");
+  } catch (err) {
+    box.innerHTML = "";
+  }
+}
+
+// Bilingual copy updates
+function updateBilingualHero() {
+  if (lang() === "ta") {
+    document.getElementById("heroHeadline").innerHTML = "சமையல் அறிவோம்.<br>சுவைப்போம். <span>பகிர்வோம்.</span>";
+    document.getElementById("heroSubtitle").textContent = "தமிழ் மற்றும் ஆங்கிலத்தில் பாரம்பரிய சமையல் குறிப்புகள், செய்முறை யூடியூப் வீடியோக்கள், கலைச்சொற்கள் அகராதி மற்றும் செஃப்போட் AI உடனான சமையல் வழிகாட்டியை உடனே பெறுங்கள்.";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadRecipes();
+  loadGlossaryPreview();
+  if (getToken()) {
+    document.getElementById("recentSection").style.display = "block";
+    loadRecent();
+  }
+  updateBilingualHero();
+});
+</script>
+</body>
+</html>

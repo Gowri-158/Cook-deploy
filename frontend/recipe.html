@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Recipe Details | CookShare</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .star-rating-select {
+      display: flex;
+      gap: 6px;
+      margin: 6px 0 12px;
+      font-size: 26px;
+      cursor: pointer;
+    }
+    .star-item {
+      color: #cbd5e1;
+      transition: color 0.15s ease, transform 0.15s ease;
+      user-select: none;
+    }
+    .star-item.active, .star-item:hover {
+      color: #f59e0b;
+      transform: scale(1.15);
+    }
+    .review-card {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+    .review-card:hover {
+      border-color: var(--primary-soft);
+    }
+    .review-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--primary-deep);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .sub-tag {
+      font-size: 11px;
+      background: var(--primary-soft);
+      color: var(--primary-deep);
+      border: 1px solid var(--line);
+      padding: 2px 7px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+    .sub-tag:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+<header></header>
+<main id="app"></main>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+let currentRecipe = null;
+let currentServings = 4;
+let baseServings = 4;
+let selectedRating = 5;
+
+function ytEmbed(url) {
+  try {
+    const u = new URL(url);
+    let id = u.hostname.includes("youtu.be") ? u.pathname.slice(1).split("?")[0] : u.searchParams.get("v");
+    if (id) return "https://www.youtube.com/embed/" + id + "?rel=0&cc_load_policy=1";
+    let sq = u.searchParams.get("search_query");
+    if (sq) return "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(sq);
+    if (u.hostname.includes("vimeo.com")) {
+      const id = u.pathname.split("/").filter(Boolean).pop();
+      return "https://player.vimeo.com/video/" + id + "?texttrack=ta";
+    }
+  } catch (e) {}
+  return null;
+}
+
+function bilingual(en, ta) {
+  return lang() === "ta" ? (ta || en) : en;
+}
+
+function scaleQuantity(qtyStr, baseServ, targetServ) {
+  if (!qtyStr) return "";
+  const num = parseFloat(qtyStr);
+  if (isNaN(num)) return qtyStr;
+  const scaled = (num / baseServ) * targetServ;
+  return Number.isInteger(scaled) ? scaled.toString() : scaled.toFixed(1).replace(/\.0$/, "");
+}
+
+function renderIngredients() {
+  if (!currentRecipe || !currentRecipe.ingredients) return "<li>No ingredients added.</li>";
+  return currentRecipe.ingredients.map((i, idx) => {
+    const scaledQty = scaleQuantity(i.quantity, baseServings, currentServings);
+    const unit = lang() === "ta" ? (i.unit_ta || i.unit || "") : (i.unit || "");
+    const name = bilingual(i.name, i.name_ta);
+    const firstWord = (i.name || "").split(" ")[0].toLowerCase();
+    return `<li>
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px">
+        <div>
+          <b>${esc(scaledQty)} ${esc(unit)}</b> ${esc(name)}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="sub-tag" onclick="checkSub('${esc(firstWord)}')">🔄 Sub</span>
+          <button class="add-single-shop-btn" onclick="addSingleIngredientToShopping(${idx})" title="Add to shopping list">
+            + 🛒
+          </button>
+        </div>
+      </div>
+    </li>`;
+  }).join("");
+}
+
+async function addSingleIngredientToShopping(idx) {
+  if (!currentRecipe || !currentRecipe.ingredients || !currentRecipe.ingredients[idx]) return;
+  const i = currentRecipe.ingredients[idx];
+  const scaledQty = scaleQuantity(i.quantity, baseServings, currentServings);
+  const unit = lang() === "ta" ? (i.unit_ta || i.unit || "") : (i.unit || "");
+  const name = bilingual(i.name, i.name_ta);
+  const dishTitle = bilingual(currentRecipe.title, currentRecipe.title_ta);
+
+  await addItemsToShoppingList({
+    name,
+    quantity: scaledQty,
+    unit,
+    category: dishTitle,
+    dish_name: dishTitle
+  }, dishTitle);
+
+  showToast(
+    lang() === "ta" ? `🛒 "${name}" (${dishTitle}) பட்டியலில் சேர்க்கப்பட்டது!` : `🛒 Added "${name}" (${dishTitle}) to your Shopping List!`,
+    "success",
+    { text: lang() === "ta" ? `"${dishTitle}" மெனு பார்க்க ➔` : `View "${dishTitle}" Menu ➔`, url: `shopping.html?dish=${encodeURIComponent(dishTitle)}` }
+  );
+}
+
+function changeServings(delta) {
+  const next = currentServings + delta;
+  if (next < 1 || next > 30) return;
+  currentServings = next;
+  document.getElementById("servingsVal").textContent = currentServings;
+  document.getElementById("ingredientsList").innerHTML = renderIngredients();
+}
+
+async function checkSub(item) {
+  try {
+    const res = await api("/ai/substitutions/" + encodeURIComponent(item));
+    const opts = (res.options || []).map(o => `• ${o.replacement} (${o.bestFor})`).join("\n");
+    alert(`Culinary Substitutes for ${res.item}:\n\n${opts}`);
+  } catch {
+    alert(`Looking for a substitute for "${item}"? Open ChefBot AI at the bottom right to ask!`);
+  }
+}
+
+function renderReviewCard(x) {
+  const initial = (x.name || "F").charAt(0).toUpperCase();
+  const dateStr = x.created_at ? new Date(x.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : "Recently";
+  const stars = "★".repeat(Math.min(5, Math.max(1, x.rating))) + "☆".repeat(5 - Math.min(5, Math.max(1, x.rating)));
+
+  return `
+    <div class="review-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="review-avatar">${initial}</div>
+          <div>
+            <strong style="color:var(--text);font-size:0.95rem">${esc(x.name)}</strong>
+            <small style="display:block;color:var(--muted)">${dateStr}</small>
+          </div>
+        </div>
+        <span style="color:#f59e0b;font-weight:700;font-size:1.1rem">${stars}</span>
+      </div>
+      <p style="color:var(--text);font-size:0.92rem;line-height:1.5;margin-left:48px">${esc(x.comment || "")}</p>
+    </div>
+  `;
+}
+
+function setStar(n) {
+  selectedRating = n;
+  document.querySelectorAll(".star-item").forEach((s, idx) => {
+    s.classList.toggle("active", idx < n);
+  });
+  document.getElementById("ratingDisplay").textContent = `${n} / 5 Stars`;
+}
+
+async function loadRecipe() {
+  const id = new URLSearchParams(location.search).get("id");
+  if (!id) {
+    app.innerHTML = `<div class="panel empty">Recipe ID not specified. <a href="explore.html">Browse recipes</a></div>`;
+    return;
+  }
+
+  try {
+    const r = await api("/recipes/" + id);
+    currentRecipe = r;
+    baseServings = Number(r.servings) || 4;
+    currentServings = baseServings;
+
+    // Track recently accessed
+    if (getToken()) {
+      api("/users/me/recent/" + id, { method: "POST" }).catch(() => {});
+      api("/recipes/" + id + "/recent", { method: "POST" }).catch(() => {});
+    }
+
+    const title = bilingual(r.title, r.title_ta);
+    const desc = bilingual(r.description, r.description_ta);
+    const image = r.image_url || "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1100&q=80";
+
+    // YouTube Video resolution
+    let videoEmbedUrl = "";
+    let ytWatchUrl = r.video_url || "";
+
+    if (r.video_url) {
+      const embed = ytEmbed(r.video_url);
+      if (embed) {
+        videoEmbedUrl = embed;
+      }
+    }
+
+    if (!videoEmbedUrl) {
+      videoEmbedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(r.title + " recipe")}`;
+    }
+    if (!ytWatchUrl) {
+      ytWatchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.title + " recipe")}`;
+    }
+
+    const steps = (r.steps || []).map(s => `<li>${esc(bilingual(s.instruction, s.instruction_ta))}</li>`).join("");
+    const currentUser = getUser();
+    const defaultReviewerName = currentUser ? currentUser.name : "";
+
+    app.innerHTML = `
+      <div class="two">
+        <div>
+          <img src="${esc(image)}" alt="${esc(title)}" style="width:100%;height:430px;object-fit:cover;border-radius:20px;box-shadow:var(--shadow)">
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="pill">${esc(r.cuisine)} · ${esc(r.difficulty)}</span>
+            <span class="video-badge">▶ Video Available</span>
+          </div>
+          <h1 style="margin:10px 0 6px">${esc(title)}</h1>
+          <p class="muted">By <b>${esc(r.author)}</b> · <span id="topRatingBox" style="color:#f59e0b;font-weight:700">⭐ ${Number(r.rating || 5).toFixed(1)}</span></p>
+          <p style="margin-top:6px">⏱ Prep: <b>${r.prep_minutes} min</b> | Cook: <b>${r.cook_minutes} min</b></p>
+
+          <!-- Interactive Serving Scaler -->
+          <div class="scaler-box">
+            <span>🍽 ${tr("servings")}:</span>
+            <button class="scaler-btn" onclick="changeServings(-1)">-</button>
+            <span id="servingsVal">${currentServings}</span>
+            <button class="scaler-btn" onclick="changeServings(1)">+</button>
+            <small style="color:var(--muted);margin-left:4px">(Auto-scales quantities)</small>
+          </div>
+
+          <p style="margin-top:10px;line-height:1.7">${esc(desc || "")}</p>
+
+          <div class="feature-row" style="margin-top:20px">
+            <button class="btn" onclick="saveFavorite(${r.id})">♡ ${tr("save")}</button>
+            <button class="btn alt" onclick="window.print()">🖨 ${tr("print")}</button>
+            <button class="btn alt" onclick="shareRecipe('${encodeURIComponent(title)}')">↗ Share</button>
+            <a class="btn alt" href="#recipeVideo">▶ Watch Video</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- YouTube Recipe Video Section -->
+      <section id="recipeVideo" class="panel" style="margin-top:30px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+          <div>
+            <span class="pill" style="background:#fee2e2;color:#b91c1c;border-color:#fecaca">▶ YOUTUBE RECIPE VIDEO</span>
+            <h2 style="margin-top:6px">${lang() === 'ta' ? 'செய்முறை வீடியோ வழிகாட்டி' : 'Step-by-Step Cooking Video Tutorial'}</h2>
+          </div>
+          <a href="${esc(ytWatchUrl)}" target="_blank" rel="noopener" class="btn small" style="background:#ef4444;box-shadow:0 4px 14px rgba(239,68,68,0.3)">
+            ▶ ${lang() === 'ta' ? 'யூடியூபில் பார்க்க' : 'Watch on YouTube'} ↗
+          </a>
+        </div>
+
+        <div class="video-wrap">
+          <iframe src="${esc(videoEmbedUrl)}" title="${esc(title)} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+        <!-- Direct YouTube Link Strip -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 16px;background:var(--panel-alt);border:1px solid var(--line);border-radius:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px;min-width:240px">
+            <span style="font-size:20px;color:#ef4444">🔗</span>
+            <div>
+              <small style="color:var(--muted);display:block;font-weight:700">Direct YouTube URL:</small>
+              <a href="${esc(ytWatchUrl)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--primary);text-decoration:underline;word-break:break-all">${esc(ytWatchUrl)}</a>
+            </div>
+          </div>
+          <button class="btn small alt" onclick="navigator.clipboard.writeText('${esc(ytWatchUrl)}').then(()=>alert('YouTube video link copied to clipboard!'))">📋 Copy Video Link</button>
+        </div>
+      </section>
+
+      <div class="two" style="margin-top:30px">
+        <section class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h2 style="margin:0">${tr("ingredients")}</h2>
+            <button class="btn small alt" onclick="addRecipeIngredients(${r.id})">🛒 Add to Shopping List</button>
+          </div>
+          <ul id="ingredientsList" style="line-height:1.8">
+            ${renderIngredients()}
+          </ul>
+        </section>
+
+        <section class="panel">
+          <h2>${tr("instructions")}</h2>
+          <ol class="cook-mode" style="line-height:1.8">
+            ${steps || "<li>No steps added.</li>"}
+          </ol>
+          <button class="btn alt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ Back to Top</button>
+        </section>
+      </div>
+
+      <!-- Reviews and Feedback Section -->
+      <section id="reviewsSection" class="panel" style="margin-top:30px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+          <div>
+            <span class="pill" data-i18n="review">COMMUNITY FEEDBACK & REVIEWS</span>
+            <h2 style="margin-top:6px">User Feedback (<span id="reviewCountNum">${r.reviews ? r.reviews.length : 0}</span>)</h2>
+          </div>
+          <div id="badgeAvgRating" class="pill" style="font-size:14px;background:#fef3c7;color:#92400e;border-color:#fde68a">
+            ⭐ ${Number(r.rating || 5).toFixed(1)} / 5.0
+          </div>
+        </div>
+
+        <!-- Existing Reviews List -->
+        <div id="reviewsList" style="margin-bottom:24px">
+          ${r.reviews && r.reviews.length ? r.reviews.map(renderReviewCard).join("") : `<p id="noReviewsNotice" class="muted">No reviews yet. Be the first to share your cooking feedback!</p>`}
+        </div>
+
+        <hr style="border:0;border-top:1px solid var(--line);margin:24px 0">
+
+        <!-- Leave Feedback Form -->
+        <div style="background:var(--panel-alt);border:1px solid var(--line);border-radius:16px;padding:24px">
+          <h3 style="margin-bottom:4px">✍ Leave Your Cooking Feedback</h3>
+          <p class="muted" style="font-size:0.88rem;margin-bottom:16px">Share how the dish turned out, taste feedback, or tips for fellow cooks.</p>
+
+          <form id="feedbackForm" onsubmit="submitReview(event, ${r.id})">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
+              <label>Your Name *
+                <input id="reviewerName" placeholder="Your name (e.g. Arun, Priya)..." value="${esc(defaultReviewerName)}" required>
+              </label>
+              <div>
+                <label>Your Rating * (<span id="ratingDisplay">5 / 5 Stars</span>)</label>
+                <div class="star-rating-select">
+                  <span class="star-item active" onclick="setStar(1)">★</span>
+                  <span class="star-item active" onclick="setStar(2)">★</span>
+                  <span class="star-item active" onclick="setStar(3)">★</span>
+                  <span class="star-item active" onclick="setStar(4)">★</span>
+                  <span class="star-item active" onclick="setStar(5)">★</span>
+                </div>
+              </div>
+            </div>
+
+            <label>Feedback Comment *
+              <textarea id="reviewComment" rows="3" placeholder="How was the taste, spices, and cooking steps? Any modifications you made?" required></textarea>
+            </label>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px">
+              <button id="submitReviewBtn" type="submit" class="btn">🚀 Submit Feedback</button>
+              <span id="reviewStatus" style="font-size:0.9rem;font-weight:700"></span>
+            </div>
+          </form>
+        </div>
+      </section>
+    `;
+  } catch (e) {
+    app.innerHTML = `<div class="panel empty" style="color:var(--danger)"><h2>Error loading recipe</h2><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+async function saveFavorite(id) {
+  if (getToken()) {
+    try {
+      await api("/users/me/favorites/" + id, { method: "POST" });
+      alert("❤️ Recipe successfully saved to your CookShare favorites!");
+      return;
+    } catch (e) {
+      if ((e.message || "").toLowerCase().includes("duplicate") || (e.message || "").toLowerCase().includes("already")) {
+        alert("This recipe is already in your favorites!");
+        return;
+      }
+    }
+  }
+  let localFavs = JSON.parse(localStorage.getItem("cookshare_favs") || "[]");
+  if (!localFavs.includes(id)) {
+    localFavs.push(id);
+    localStorage.setItem("cookshare_favs", JSON.stringify(localFavs));
+    alert("❤️ Saved to your Favorites!");
+  } else {
+    alert("This recipe is already in your saved favorites!");
+  }
+}
+
+async function submitReview(e, id) {
+  e.preventDefault();
+  const nameInput = document.getElementById("reviewerName");
+  const commentInput = document.getElementById("reviewComment");
+  const statusSpan = document.getElementById("reviewStatus");
+  const submitBtn = document.getElementById("submitReviewBtn");
+
+  const name = nameInput.value.trim() || "Food Enthusiast";
+  const comment = commentInput.value.trim();
+
+  if (!comment) {
+    alert("Please enter a comment for your feedback.");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  statusSpan.style.color = "var(--primary)";
+  statusSpan.textContent = "Submitting feedback...";
+
+  try {
+    const data = await api("/recipes/" + id + "/reviews", {
+      method: "POST",
+      body: JSON.stringify({
+        rating: selectedRating,
+        comment,
+        name
+      })
+    });
+
+    statusSpan.style.color = "var(--success)";
+    statusSpan.textContent = "✅ Feedback submitted successfully!";
+
+    // Prepend the new review into the list without page reload
+    const reviewsBox = document.getElementById("reviewsList");
+    const noReviewsNotice = document.getElementById("noReviewsNotice");
+    if (noReviewsNotice) noReviewsNotice.remove();
+
+    const newCardHtml = renderReviewCard({
+      name,
+      rating: selectedRating,
+      comment,
+      created_at: new Date().toISOString()
+    });
+
+    reviewsBox.insertAdjacentHTML("afterbegin", newCardHtml);
+
+    // Update count and avg rating
+    if (data.totalReviews) {
+      document.getElementById("reviewCountNum").textContent = data.totalReviews;
+    }
+    if (data.avgRating) {
+      document.getElementById("badgeAvgRating").textContent = `⭐ ${data.avgRating} / 5.0`;
+      document.getElementById("topRatingBox").textContent = `⭐ ${data.avgRating}`;
+    }
+
+    // Reset comment field
+    commentInput.value = "";
+    setTimeout(() => {
+      statusSpan.textContent = "";
+      submitBtn.disabled = false;
+    }, 3000);
+  } catch (err) {
+    statusSpan.style.color = "var(--danger)";
+    statusSpan.textContent = "Error: " + err.message;
+    submitBtn.disabled = false;
+  }
+}
+
+async function addRecipeIngredients(id) {
+  if (!currentRecipe || !currentRecipe.ingredients || !currentRecipe.ingredients.length) {
+    showToast("No ingredients found in this recipe", "error");
+    return;
+  }
+
+  const dishTitle = bilingual(currentRecipe.title, currentRecipe.title_ta);
+  const items = currentRecipe.ingredients.map(i => {
+    const scaledQty = scaleQuantity(i.quantity, baseServings, currentServings);
+    return {
+      name: bilingual(i.name, i.name_ta),
+      quantity: scaledQty,
+      unit: lang() === "ta" ? (i.unit_ta || i.unit || "") : (i.unit || ""),
+      category: dishTitle,
+      dish_name: dishTitle
+    };
+  });
+
+  const res = await addItemsToShoppingList(items, dishTitle);
+  if (res.success) {
+    showToast(
+      lang() === "ta"
+        ? `🛒 ${items.length} பொருட்கள் உங்கள் ஷாப்பிங் பட்டியலில் சேர்க்கப்பட்டன!`
+        : `🛒 Added ${items.length} ingredients from "${dishTitle}" to your Shopping List!`,
+      "success",
+      { text: lang() === "ta" ? `"${dishTitle}" மெனு பார்க்க ➔` : `View "${dishTitle}" Menu ➔`, url: `shopping.html?dish=${encodeURIComponent(dishTitle)}` }
+    );
+  }
+}
+
+function shareRecipe(t) {
+  const shareTitle = decodeURIComponent(t);
+  const shareUrl = location.href;
+  if (navigator.share) {
+    navigator.share({ title: shareTitle, text: `Check out ${shareTitle} recipe on CookShare:`, url: shareUrl }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert("📋 Recipe link copied to clipboard!\n" + shareUrl);
+    });
+  } else {
+    prompt("Copy recipe link:", shareUrl);
+  }
+}
+
+loadRecipe();
+</script>
+</body>
+</html>

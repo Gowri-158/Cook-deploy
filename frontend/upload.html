@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Share Recipe | CookShare</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header></header>
+
+<main>
+  <div class="panel">
+    <span class="pill">BILINGUAL RECIPE CREATOR</span>
+    <h1 style="font-size:2.2rem;margin:8px 0 6px">Share Your Recipe</h1>
+    <p class="muted">Add English + தமிழ் content so every visitor can understand your recipe. You can also attach a YouTube recipe video and subtitles.</p>
+
+    <form id="recipeForm" style="margin-top:20px">
+      <div class="two">
+        <label>Recipe Title (English) *
+          <input id="title" placeholder="e.g. Authentic Chettinad Pepper Chicken" required>
+        </label>
+        <label>Recipe Title (தமிழ்)
+          <input id="title_ta" placeholder="உதா: பாரம்பரிய செட்டிநாடு கோழி மிளகு வறுவல்">
+        </label>
+        <label>Cuisine *
+          <input id="cuisine" placeholder="e.g. South Indian, Chettinad, Italian" required>
+        </label>
+        <label>Meal Type *
+          <input id="meal_type" placeholder="Breakfast / Lunch / Dinner / Snack" required>
+        </label>
+        <label>Difficulty Level
+          <select id="difficulty">
+            <option>Easy</option>
+            <option>Medium</option>
+            <option>Hard</option>
+          </select>
+        </label>
+        <label>Preparation Time (minutes) *
+          <input id="prep" type="number" min="0" value="15" required>
+        </label>
+        <label>Cooking Time (minutes) *
+          <input id="cook" type="number" min="0" value="25" required>
+        </label>
+        <label>Servings *
+          <input id="servings" type="number" min="1" value="4" required>
+        </label>
+        <label>Recipe Image URL
+          <input id="image_url" placeholder="https://images.unsplash.com/...">
+        </label>
+        <label>Cooking Video URL (YouTube / Vimeo / MP4)
+          <input id="video_url" placeholder="https://www.youtube.com/watch?v=...">
+        </label>
+        <label>Subtitle URL (VTT file)
+          <input id="subtitle_url" placeholder="/subtitles/recipe_en_ta.vtt">
+        </label>
+      </div>
+
+      <div class="two" style="margin-top:14px">
+        <label>Description (English) *
+          <textarea id="description" rows="3" placeholder="Brief summary of the dish..." required></textarea>
+        </label>
+        <label>Description (தமிழ்)
+          <textarea id="description_ta" rows="3" placeholder="தமிழில் சமையல் பற்றிய குறிப்பு..."></textarea>
+        </label>
+      </div>
+
+      <div style="margin-top:14px">
+        <label>Ingredients — one per line format: <b>quantity | unit EN | ingredient EN | ingredient தமிழ் | unit தமிழ்</b>
+          <textarea id="ingredients" rows="4" placeholder="2 | cups | rice | அரிசி | கப்&#10;1 | tbsp | sesame oil | நல்லெண்ணெய் | மேசைக்கரண்டி" required></textarea>
+        </label>
+      </div>
+
+      <div style="margin-top:14px">
+        <label>Instructions — one step per line format: <b>English step || தமிழ் செய்முறை</b>
+          <textarea id="steps" rows="4" placeholder="Wash and soak the rice for 30 minutes. || அரிசியை கழுவி 30 நிமிடங்கள் ஊறவைக்கவும்.&#10;Cook on medium heat until tender. || மிதமான தீயில் வேகவைத்து எடுக்கவும்." required></textarea>
+        </label>
+      </div>
+
+      <div style="margin-top:14px">
+        <label>Dietary Tags
+          <input id="dietary_tags" placeholder="Vegetarian, High-Protein, Gluten-Free">
+        </label>
+      </div>
+
+      <button class="btn" style="margin-top:16px">Publish Recipe</button>
+    </form>
+    <p id="message" style="margin-top:14px;font-weight:700"></p>
+  </div>
+</main>
+
+<footer>© 2026 CookShare · Bilingual Culinary Platform (English / தமிழ்)</footer>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+if (!requireLogin()) {}
+
+recipeForm.onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const ingredientList = ingredients.value.split("\n").filter(Boolean).map(line => {
+      const a = line.split("|").map(x => x.trim());
+      return {
+        quantity: a[0] || "",
+        unit: a[1] || "",
+        name: a[2] || "",
+        name_ta: a[3] || "",
+        unit_ta: a[4] || ""
+      };
+    });
+
+    const stepsList = steps.value.split("\n").map(x => {
+      const a = x.split("||");
+      return {
+        instruction: (a[0] || "").trim(),
+        instruction_ta: (a[1] || "").trim()
+      };
+    }).filter(x => x.instruction || x.instruction_ta);
+
+    const data = await api("/recipes", {
+      method: "POST",
+      body: JSON.stringify({
+        title: title.value,
+        title_ta: title_ta.value,
+        description: description.value,
+        description_ta: description_ta.value,
+        cuisine: cuisine.value,
+        meal_type: meal_type.value,
+        difficulty: difficulty.value,
+        prep_minutes: Number(prep.value),
+        cook_minutes: Number(cook.value),
+        servings: Number(servings.value),
+        image_url: image_url.value,
+        video_url: video_url.value,
+        subtitle_url: subtitle_url.value,
+        dietary_tags: dietary_tags.value,
+        ingredients: ingredientList,
+        steps: stepsList
+      })
+    });
+
+    message.style.color = "var(--success)";
+    message.textContent = "Recipe published successfully! Recipe ID: " + data.recipeId;
+    recipeForm.reset();
+  } catch (err) {
+    message.style.color = "var(--danger)";
+    message.textContent = "Error: " + err.message;
+  }
+};
+</script>
+</body>
+</html>
