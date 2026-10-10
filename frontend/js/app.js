@@ -14,7 +14,7 @@ function recipeCard(r) {
         <a href="recipe.html?id=${r.id}" style="display:block;overflow:hidden">
           <img src="${esc(image)}" alt="${esc(title)}" loading="lazy" style="transition:transform 0.3s ease">
         </a>
-        ${r.video_url ? `<a href="recipe.html?id=${r.id}#recipeVideo" class="video-badge" style="position:absolute;top:12px;right:12px;box-shadow:0 4px 10px rgba(0,0,0,0.25);text-decoration:none">▶ ${isTa ? 'வீடியோ' : 'YouTube'}</a>` : ""}
+        ${r.video_url ? `<a href="recipe.html?id=${r.id}#recipeVideos" class="video-badge" style="position:absolute;top:12px;right:12px;box-shadow:0 4px 10px rgba(0,0,0,0.25);text-decoration:none;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:800">▶ ${isTa ? '5 வீடியோ' : '5 Videos'}</a>` : ""}
       </div>
       <div class="card-content">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -27,7 +27,7 @@ function recipeCard(r) {
         
         <div class="card-actions" style="display:flex;flex-wrap:wrap;gap:6px">
           <a class="btn small" href="recipe.html?id=${r.id}">👨‍🍳 ${tr("cook")}</a>
-          ${r.video_url ? `<a class="btn small alt" href="recipe.html?id=${r.id}#recipeVideo" title="Watch Cooking Video">▶ Video</a>` : ""}
+          ${r.video_url ? `<a class="btn small alt" href="recipe.html?id=${r.id}#recipeVideos" title="Watch 5 YouTube Recipe Videos" style="border-color:#ef4444;color:#ef4444;font-weight:700">▶ 5 Videos</a>` : ""}
           <button class="btn small alt" onclick="quickSaveFavorite(${r.id}, '${esc(encodedTitle)}')" title="Save to Favorites">♡ Save</button>
           <button class="btn small alt" onclick="quickShareRecipe('${esc(encodedTitle)}', ${r.id})" title="Share Recipe">↗ Share</button>
         </div>

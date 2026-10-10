@@ -192,3 +192,388 @@ p { color: var(--muted); line-height: 1.6; }
   .recipe-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .planner-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Modal Overlay & Container */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  padding: 30px;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* YouTube Carousel Styles for React */
+.yt-carousel-section {
+  margin: 28px 0;
+  background: linear-gradient(145deg, #18181b 0%, #09090b 100%);
+  border-radius: 24px;
+  padding: 26px 24px 22px;
+  color: #ffffff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.yt-carousel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.yt-carousel-top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  margin-bottom: 8px;
+}
+
+.yt-carousel-title-group h2 {
+  font-size: 1.55rem;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+
+.yt-carousel-title-group p {
+  color: #a1a1aa;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.yt-carousel-layout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.yt-carousel-nav-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.yt-carousel-nav-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
+}
+
+.yt-carousel-viewport {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 18px;
+  position: relative;
+  touch-action: pan-y;
+}
+
+.yt-carousel-track {
+  display: flex;
+  gap: 18px;
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+  width: 100%;
+}
+
+.yt-video-card {
+  flex: 0 0 calc((100% - 36px) / 3);
+  background: #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.yt-video-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.5), 0 0 20px rgba(239, 68, 68, 0.25);
+}
+
+.yt-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: #000;
+  overflow: hidden;
+}
+
+.yt-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.yt-video-card:hover .yt-thumb-img {
+  transform: scale(1.06);
+}
+
+.yt-play-pill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s ease, background 0.25s ease;
+  z-index: 2;
+}
+
+.yt-video-card:hover .yt-play-pill {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: #ff0000;
+}
+
+.yt-badge-index {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 2;
+}
+
+.yt-badge-bottom {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+.yt-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.yt-meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.yt-brand-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.yt-card-recipe-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a1a1aa;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yt-channel-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 7px;
+  border-radius: 6px;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yt-video-card-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: #ffffff;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.7em;
+}
+
+.yt-watch-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: #ef4444;
+  color: #ffffff !important;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.28);
+  border: none;
+  cursor: pointer;
+}
+
+.yt-watch-action-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.yt-carousel-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.yt-carousel-indicators {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.yt-carousel-dot {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: #71717a;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.yt-carousel-dot.active {
+  color: #ef4444;
+  font-size: 22px;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.yt-carousel-counter {
+  font-size: 12px;
+  font-weight: 800;
+  color: #a1a1aa;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 900px) {
+  .yt-video-card {
+    flex: 0 0 calc((100% - 18px) / 2);
+  }
+}
+
+@media (max-width: 600px) {
+  .yt-video-card {
+    flex: 0 0 100%;
+  }
+  .yt-carousel-nav-btn .nav-text {
+    display: none;
+  }
+}

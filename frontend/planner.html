@@ -92,6 +92,94 @@
       margin-top: 6px;
       font-size: 13px;
     }
+    /* Saved Meal Plans & Template Modal Styles */
+    .plan-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: planModalFadeIn 0.22s ease-out forwards;
+    }
+    @keyframes planModalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .plan-modal-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      animation: planModalSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes planModalSlideUp {
+      from { transform: translateY(22px) scale(0.96); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .plan-modal-header {
+      background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+      color: #ffffff;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .plan-modal-header.save-header {
+      background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+    }
+    .saved-plan-card {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+    .saved-plan-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+    .plan-tag-pill {
+      cursor: pointer;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.15s ease;
+      display: inline-block;
+      user-select: none;
+    }
+    .plan-tag-pill:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .day-preview-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--line);
+      font-size: 12.5px;
+    }
+    .day-preview-row:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -107,14 +195,39 @@
         Select your weekly meals. CookShare automatically analyzes every recipe and creates your <b>Weekly Glossary & Grocery List</b> to buy! If you already have an item at home, simply click <b>Delete</b>.
       </p>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn alt" onclick="clearFullPlan()">🗑 Clear Plan</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn" onclick="openSavePlanModal()" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);color:#fff;font-weight:700;border:none;box-shadow:0 3px 12px rgba(16,185,129,0.28)" title="Save current weekly meal plan so you can use it again next time!">
+        <span>💾 அடுத்த முறைக்கு சேமி / Save for Later</span>
+      </button>
+      <button class="btn alt" onclick="openSavedPlansModal()" style="font-weight:700;display:inline-flex;align-items:center;gap:6px" title="Load or manage your saved weekly plans">
+        <span>📂 சேமித்த பிளான்கள்</span>
+        <span id="savedPlansCountBadge" class="pill" style="font-size:11px;padding:2px 7px;background:var(--primary);color:#fff;border-radius:12px">0</span>
+      </button>
+      <button class="btn whatsapp-btn" onclick="openMealPlanWhatsAppModal('all')" style="font-weight:700;padding:10px 18px" title="Share day-by-day weekly meal plan to WhatsApp (Monday food, Tuesday food, etc.)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm.01 16.59c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.04 8.04 0 01-1.23-4.28c0-4.46 3.63-8.09 8.09-8.09 2.16 0 4.19.84 5.72 2.37 1.53 1.53 2.37 3.56 2.37 5.72 0 4.46-3.63 8.14-8.16 8.14zm4.44-6.09c-.24-.12-1.44-.71-1.66-.79-.22-.09-.39-.12-.55.12-.17.24-.64.79-.79.95-.14.17-.29.19-.53.07-.24-.12-1.03-.38-1.96-1.21-.72-.64-1.21-1.44-1.35-1.68-.14-.24-.02-.37.1-.49.11-.11.24-.29.37-.43.12-.14.17-.24.25-.4.08-.17.04-.31-.02-.43-.07-.12-.55-1.33-.76-1.82-.2-.48-.41-.41-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.24-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.78 2.71 4.3 3.8.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28z"/>
+        </svg>
+        <span>📲 உணவு அட்டவணை WhatsApp</span>
+      </button>
+      <button class="btn alt whatsapp-btn" onclick="sharePlannerGroceryToWhatsApp()" style="background:#128C7E;color:#fff" title="Share weekly grocery ingredients checklist to WhatsApp">
+        <span>🛒 மளிகை WhatsApp</span>
+      </button>
+      <button class="btn email-btn" onclick="openMealPlanEmailModal('all')" style="font-weight:700;padding:10px 18px" title="Send day-by-day weekly meal plan via Email / Gmail (Monday food, Tuesday food, etc.)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <span>📧 உணவு அட்டவணை Email</span>
+      </button>
+      <button class="btn alt email-btn" onclick="sharePlannerGroceryToEmail()" style="background:#1e40af;color:#fff" title="Send weekly grocery ingredients checklist via Email / Gmail">
+        <span>🛒 மளிகை Email</span>
+      </button>
       <button class="btn" onclick="transferToShoppingList()">🛒 Sync to Shopping List</button>
+      <button class="btn alt" onclick="clearFullPlan()">🗑 Clear Plan</button>
     </div>
   </div>
 
   <!-- Real-time Stats Strip -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:28px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:20px">
     <div class="panel" style="padding:16px 20px;margin-bottom:0">
       <small class="muted" style="font-weight:700">MEALS PLANNED</small>
       <div style="font-size:1.8rem;font-weight:800;color:var(--primary);margin-top:4px" id="totalMealsCount">0 Meals</div>
@@ -126,6 +239,34 @@
     <div class="panel" style="padding:16px 20px;margin-bottom:0">
       <small class="muted" style="font-weight:700">EXCLUDED ITEMS (DELETED)</small>
       <div style="font-size:1.8rem;font-weight:800;color:var(--muted);margin-top:4px" id="excludedItemsCount">0 Items</div>
+    </div>
+  </div>
+
+  <!-- Plan Reusability & Templates Toolbar -->
+  <div class="panel" style="background:var(--panel-alt);border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:var(--shadow-sm)">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(16,185,129,0.15);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
+        🔁
+      </div>
+      <div>
+        <strong style="font-size:1rem;color:var(--text);display:block">
+          அடுத்த முறை பயன்படுத்த: இந்த வார உணவை சேமிக்க & மீண்டும் ஏற்க
+        </strong>
+        <span class="muted" style="font-size:0.85rem">
+          இந்த வாரம் திட்டமிட்ட மெனு அடுத்த முறையும் வேணுமா? <b>Save for Later</b> செய்து வைத்து, அடுத்த வாரம் ஒரே கிளிக்கில் அட்டவணையில் பயன்படுத்தலாம்!
+        </span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn small" onclick="openSavePlanModal()" style="background:#10b981;border-color:#10b981;color:#fff;font-weight:700">
+        💾 Save for Next Time
+      </button>
+      <button class="btn small alt" onclick="openSavedPlansModal()" style="font-weight:700">
+        📂 Load Saved Plans (<span id="savedPlansCountBanner">0</span>)
+      </button>
+      <button class="btn small alt" onclick="quickRepeatCurrentPlan()" style="font-weight:700" title="Quickly duplicate or repeat this week to next week">
+        ⚡ 1-Click Repeat
+      </button>
     </div>
   </div>
 
@@ -198,6 +339,7 @@ let allRecipes = [];
 let weeklyPlan = {}; // { "Monday_Breakfast": recipeId, ... }
 let customItems = []; // [ { name, quantity, unit, category, isCustom: true } ]
 let excludedIngredients = []; // [ "Salt", "Turmeric Powder", ... ]
+let savedMealPlans = []; // [ { id, name, plan_data: { plan, excluded, customItems }, created_at } ]
 
 const DAYS = [
   { key: "Monday", en: "Monday", ta: "திங்கள்" },
@@ -235,8 +377,73 @@ function saveState() {
   localStorage.setItem("cookshare_custom_grocery", JSON.stringify(customItems));
 }
 
+function loadSavedMealPlansFromStorage() {
+  try {
+    savedMealPlans = JSON.parse(localStorage.getItem("cookshare_saved_meal_plans")) || [];
+  } catch (e) {
+    savedMealPlans = [];
+  }
+  updateSavedPlansCountBadges();
+}
+
+function saveSavedMealPlansToStorage() {
+  localStorage.setItem("cookshare_saved_meal_plans", JSON.stringify(savedMealPlans));
+  updateSavedPlansCountBadges();
+}
+
+function updateSavedPlansCountBadges() {
+  const count = (savedMealPlans || []).length;
+  const b1 = document.getElementById("savedPlansCountBadge");
+  const b2 = document.getElementById("savedPlansCountBanner");
+  if (b1) b1.textContent = count;
+  if (b2) b2.textContent = count;
+}
+
+async function loadCloudSavedMealPlans() {
+  loadSavedMealPlansFromStorage();
+  if (typeof getToken !== "function" || !getToken()) return;
+  try {
+    const cloudPlans = await api("/users/me/saved-meal-plans");
+    if (Array.isArray(cloudPlans) && cloudPlans.length > 0) {
+      savedMealPlans = cloudPlans;
+      saveSavedMealPlansToStorage();
+    }
+  } catch (e) {}
+}
+
+let cloudSyncTimer = null;
+function syncMealPlanToCloudDebounced() {
+  if (typeof getToken !== "function" || !getToken()) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(async () => {
+    try {
+      await api("/users/me/meal-plan", {
+        method: "POST",
+        body: JSON.stringify({ plan: weeklyPlan })
+      });
+    } catch (e) {}
+  }, 800);
+}
+
+async function loadCloudMealPlan() {
+  if (typeof getToken !== "function" || !getToken()) return;
+  try {
+    const res = await api("/users/me/meal-plan");
+    if (res && res.plan && Object.keys(res.plan).length > 0) {
+      if (!Object.keys(weeklyPlan).length) {
+        weeklyPlan = res.plan;
+        saveState();
+        renderSchedule();
+        renderAddedMeals();
+        renderGroceryList();
+      }
+    }
+  } catch (e) {}
+}
+
 async function initPlanner() {
   loadPersistedState();
+  loadSavedMealPlansFromStorage();
   const box = document.getElementById("daysGrid");
 
   try {
@@ -244,6 +451,8 @@ async function initPlanner() {
     renderSchedule();
     renderAddedMeals();
     renderGroceryList();
+    loadCloudMealPlan();
+    loadCloudSavedMealPlans();
   } catch (err) {
     box.innerHTML = `<div class="panel empty" style="color:var(--danger)">Error loading recipes: ${esc(err.message)}</div>`;
   }
@@ -255,9 +464,19 @@ function renderSchedule() {
 
   box.innerHTML = DAYS.map(day => `
     <div class="panel" style="margin-bottom:0;display:flex;flex-direction:column">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="color:var(--primary);font-size:1.15rem">📅 ${isTa ? day.ta : day.en}</h3>
-        <span class="pill" style="font-size:10px">${isTa ? day.en : day.ta}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
+        <div>
+          <h3 style="color:var(--primary);font-size:1.15rem;margin:0">📅 ${isTa ? day.ta : day.en}</h3>
+          <span class="pill" style="font-size:10px;margin-top:2px">${isTa ? day.en : day.ta}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button type="button" class="btn small alt" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:4px 8px;border-color:#25D366;color:#128C7E;font-weight:700" onclick="openMealPlanWhatsAppModal('${day.key}')" title="Share ${day.en}'s meals to WhatsApp">
+            <span>📲 WhatsApp</span>
+          </button>
+          <button type="button" class="btn small alt" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:4px 8px;border-color:#3b82f6;color:#2563eb;font-weight:700" onclick="openMealPlanEmailModal('${day.key}')" title="Share ${day.en}'s meals via Email / Gmail">
+            <span>📧 Email</span>
+          </button>
+        </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:12px;flex:1">
@@ -286,12 +505,22 @@ function renderSchedule() {
 }
 
 function onMealSelect(slotKey, recipeId) {
+  const isTa = lang() === "ta";
   if (recipeId) {
     weeklyPlan[slotKey] = Number(recipeId);
+    const [dayKey, mealKey] = slotKey.split("_");
+    const dObj = DAYS.find(d => d.key === dayKey);
+    const mObj = MEAL_TYPES.find(m => m.key === mealKey);
+    const r = allRecipes.find(x => x.id === Number(recipeId));
+    const title = r ? (isTa ? (r.title_ta || r.title) : r.title) : "";
+    const dayLabel = dObj ? (isTa ? dObj.ta : dObj.en) : dayKey;
+    const mealLabel = mObj ? (isTa ? mObj.ta : mObj.en) : mealKey;
+    showToast(isTa ? `✅ ${dayLabel} ${mealLabel}: "${title}" சேர்க்கப்பட்டது! WhatsApp-ல் பகிர மேலே உள்ள பட்டனை அழுத்தவும் 📲` : `✅ ${dayLabel} ${mealLabel}: "${title}" scheduled! Click WhatsApp button above to share 📲`, "success");
   } else {
     delete weeklyPlan[slotKey];
   }
   saveState();
+  syncMealPlanToCloudDebounced();
   renderAddedMeals();
   renderGroceryList();
 }
@@ -299,6 +528,7 @@ function onMealSelect(slotKey, recipeId) {
 function removeMeal(slotKey) {
   delete weeklyPlan[slotKey];
   saveState();
+  syncMealPlanToCloudDebounced();
   renderSchedule();
   renderAddedMeals();
   renderGroceryList();
@@ -318,6 +548,12 @@ function renderAddedMeals() {
   }
 
   container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <span class="pill" style="background:#dcfce7;color:#15803d;border-color:#bbf7d0;font-weight:700">✓ ${plannedKeys.length} ${isTa ? 'உணவுகள் திட்டமிடப்பட்டுள்ளன' : 'MEALS SCHEDULED'}</span>
+      <button class="btn small whatsapp-btn" onclick="openMealPlanWhatsAppModal('all')" style="font-size:12px;padding:6px 14px;font-weight:700">
+        📲 ${isTa ? 'இந்த உணவுகளை WhatsApp-ல் அனுப்புக' : 'Send All Meals to WhatsApp'}
+      </button>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px">
       ${plannedKeys.map(k => {
         const [dayKey, mealKey] = k.split("_");
@@ -540,10 +776,203 @@ function clearFullPlan() {
   if (confirm("Clear all planned meals for the week?")) {
     weeklyPlan = {};
     saveState();
+    syncMealPlanToCloudDebounced();
     renderSchedule();
     renderAddedMeals();
     renderGroceryList();
   }
+}
+
+// Open dedicated Day-by-Day Meal Plan WhatsApp sharing modal (Monday food, Tuesday food...)
+function openMealPlanWhatsAppModal(dayFilter = "all") {
+  const isTa = lang() === "ta";
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+
+  if (!plannedKeys.length) {
+    showToast(
+      isTa
+        ? "முதலில் வார அட்டவணையில் ஏதேனும் ஒரு உணவைத் திட்டமிடுங்கள்!"
+        : "Please plan at least one meal in your schedule first!",
+      "info"
+    );
+    return;
+  }
+
+  openWhatsAppMealPlanModal({
+    weeklyPlan,
+    allRecipes,
+    days: DAYS,
+    mealTypes: MEAL_TYPES,
+    defaultDay: dayFilter || "all",
+    excludedIngredients,
+    customItems
+  });
+}
+
+// Share weekly grocery items directly to WhatsApp
+function sharePlannerGroceryToWhatsApp() {
+  const isTa = lang() === "ta";
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+
+  if (!plannedKeys.length && !customItems.length) {
+    showToast(isTa ? "முதலில் ஏதேனும் ஒரு உணவைத் திட்டமிடுங்கள்!" : "Please plan at least one meal or add a grocery item first!", "info");
+    return;
+  }
+
+  // Gather active items
+  const itemsToShare = [];
+  const processed = new Set();
+
+  for (const k of plannedKeys) {
+    const r = allRecipes.find(x => x.id === weeklyPlan[k]);
+    if (!r || !r.ingredients) continue;
+    const rTitle = isTa ? (r.title_ta || r.title) : r.title;
+    for (const ing of r.ingredients) {
+      const normKey = (ing.name || "").trim().toLowerCase();
+      if (!normKey || excludedIngredients.includes(normKey) || processed.has(normKey)) continue;
+      processed.add(normKey);
+      itemsToShare.push({
+        name: isTa ? (ing.name_ta || ing.name) : ing.name,
+        quantity: ing.quantity || "",
+        unit: (isTa ? ing.unit_ta : ing.unit) || ing.unit || "",
+        category: getIngredientCategory(ing.name),
+        dish_name: rTitle,
+        purchased: false
+      });
+    }
+  }
+
+  for (const c of customItems) {
+    const normKey = c.name.trim().toLowerCase();
+    if (!normKey || excludedIngredients.includes(normKey) || processed.has(normKey)) continue;
+    processed.add(normKey);
+    itemsToShare.push({
+      name: c.name,
+      quantity: c.quantity || "",
+      unit: c.unit || "",
+      category: c.category || (isTa ? "இதர பொருட்கள்" : "General Groceries"),
+      dish_name: isTa ? "தனிப்பயன் மளிகை" : "Custom Groceries",
+      purchased: false
+    });
+  }
+
+  if (!itemsToShare.length) {
+    showToast(isTa ? "அனைத்து பொருட்களும் விலக்கப்பட்டுள்ளன!" : "All ingredients have been excluded or deleted!", "info");
+    return;
+  }
+
+  const dishesMap = {};
+  for (const it of itemsToShare) {
+    dishesMap[it.dish_name] = true;
+  }
+
+  const headerTitle = isTa
+    ? `📅 *குக்ஷேர் - வாராந்திர மீல் பிளான் மளிகைப் பட்டியல்*`
+    : `📅 *CookShare - Weekly Meal Plan Grocery Checklist*`;
+
+  openWhatsAppModal({
+    title: headerTitle,
+    items: itemsToShare,
+    dishes: Object.keys(dishesMap),
+    defaultDish: "all",
+    showPendingToggle: false
+  });
+}
+
+// Open dedicated Day-by-Day Meal Plan Email sharing modal
+function openMealPlanEmailModal(dayFilter = "all") {
+  const isTa = lang() === "ta";
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+
+  if (!plannedKeys.length) {
+    showToast(
+      isTa
+        ? "முதலில் வார அட்டவணையில் ஏதேனும் ஒரு உணவைத் திட்டமிடுங்கள்!"
+        : "Please plan at least one meal in your schedule first!",
+      "info"
+    );
+    return;
+  }
+
+  openEmailMealPlanModal({
+    weeklyPlan,
+    allRecipes,
+    days: DAYS,
+    mealTypes: MEAL_TYPES,
+    defaultDay: dayFilter || "all",
+    excludedIngredients,
+    customItems
+  });
+}
+
+// Share weekly grocery items directly to Email
+function sharePlannerGroceryToEmail() {
+  const isTa = lang() === "ta";
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+
+  if (!plannedKeys.length && !customItems.length) {
+    showToast(isTa ? "முதலில் ஏதேனும் ஒரு உணவைத் திட்டமிடுங்கள்!" : "Please plan at least one meal or add a grocery item first!", "info");
+    return;
+  }
+
+  // Gather active items
+  const itemsToShare = [];
+  const processed = new Set();
+
+  for (const k of plannedKeys) {
+    const r = allRecipes.find(x => x.id === weeklyPlan[k]);
+    if (!r || !r.ingredients) continue;
+    const rTitle = isTa ? (r.title_ta || r.title) : r.title;
+    for (const ing of r.ingredients) {
+      const normKey = (ing.name || "").trim().toLowerCase();
+      if (!normKey || excludedIngredients.includes(normKey) || processed.has(normKey)) continue;
+      processed.add(normKey);
+      itemsToShare.push({
+        name: isTa ? (ing.name_ta || ing.name) : ing.name,
+        quantity: ing.quantity || "",
+        unit: (isTa ? ing.unit_ta : ing.unit) || ing.unit || "",
+        category: getIngredientCategory(ing.name),
+        dish_name: rTitle,
+        purchased: false
+      });
+    }
+  }
+
+  for (const c of customItems) {
+    const normKey = c.name.trim().toLowerCase();
+    if (!normKey || excludedIngredients.includes(normKey) || processed.has(normKey)) continue;
+    processed.add(normKey);
+    itemsToShare.push({
+      name: c.name,
+      quantity: c.quantity || "",
+      unit: c.unit || "",
+      category: c.category || (isTa ? "இதர பொருட்கள்" : "General Groceries"),
+      dish_name: isTa ? "தனிப்பயன் மளிகை" : "Custom Groceries",
+      purchased: false
+    });
+  }
+
+  if (!itemsToShare.length) {
+    showToast(isTa ? "அனைத்து பொருட்களும் விலக்கப்பட்டுள்ளன!" : "All ingredients have been excluded or deleted!", "info");
+    return;
+  }
+
+  const dishesMap = {};
+  for (const it of itemsToShare) {
+    dishesMap[it.dish_name] = true;
+  }
+
+  const headerTitle = isTa
+    ? `📅 குக்ஷேர் - வாராந்திர மீல் பிளான் மளிகைப் பட்டியல்`
+    : `📅 CookShare - Weekly Meal Plan Grocery Checklist`;
+
+  openEmailModal({
+    title: headerTitle,
+    items: itemsToShare,
+    dishes: Object.keys(dishesMap),
+    defaultDish: "all",
+    showPendingToggle: false
+  });
 }
 
 // Transfer active ingredients directly into Shopping List
@@ -636,6 +1065,608 @@ async function transferToShoppingList() {
   } catch (e) {
     showToast(e.message, "error");
   }
+}
+
+// ====================================================
+// SAVED MEAL PLANS & TEMPLATES FOR REUSABILITY
+// ====================================================
+
+function closeSavePlanModal() {
+  const m = document.getElementById("cookshare-save-plan-modal");
+  if (m) m.remove();
+}
+
+function openSavePlanModal() {
+  const isTa = lang() === "ta";
+  const plannedKeys = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]);
+
+  if (!plannedKeys.length) {
+    showToast(
+      isTa
+        ? "முதலில் வார அட்டவணையில் ஏதேனும் ஒரு உணவைத் திட்டமிடுங்கள்!"
+        : "Please plan at least one meal in your schedule before saving for next time!",
+      "info"
+    );
+    return;
+  }
+
+  closeSavePlanModal();
+
+  const todayDate = new Date().toLocaleDateString(isTa ? "ta-IN" : "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+  const defaultName = isTa
+    ? `வார உணவு அட்டவணை (${todayDate})`
+    : `Weekly Menu (${todayDate})`;
+
+  // Count days
+  const activeDaysSet = new Set(plannedKeys.map(k => k.split("_")[0]));
+
+  // Mini preview chips
+  const previewChips = plannedKeys.slice(0, 6).map(k => {
+    const [dKey, mKey] = k.split("_");
+    const dObj = DAYS.find(d => d.key === dKey);
+    const mObj = MEAL_TYPES.find(m => m.key === mKey);
+    const r = allRecipes.find(x => x.id === weeklyPlan[k]);
+    const title = r ? (isTa ? (r.title_ta || r.title) : r.title) : "";
+    return `<span class="pill" style="font-size:11px;padding:3px 8px;margin:2px">${mObj ? mObj.icon : ""} ${dObj ? (isTa ? dObj.ta : dObj.en) : dKey}: ${esc(title)}</span>`;
+  }).join("");
+
+  const backdrop = document.createElement("div");
+  backdrop.id = "cookshare-save-plan-modal";
+  backdrop.className = "plan-modal-backdrop";
+
+  backdrop.innerHTML = `
+    <div class="plan-modal-card" role="dialog" aria-modal="true">
+      <div class="plan-modal-header save-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px">
+            💾
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:1.15rem;font-weight:700">
+              ${isTa ? "அடுத்த முறைக்கு சேமிக்க (Save for Next Time)" : "Save Meal Plan for Later"}
+            </h3>
+            <small style="opacity:0.9;font-size:12px;display:block">
+              ${isTa ? "அடுத்த வாரம் அல்லது எதிர்காலத்தில் ஒரே கிளிக்கில் மீண்டும் பயன்படுத்தலாம்" : "Reuse this weekly plan anytime without picking recipes from scratch"}
+            </small>
+          </div>
+        </div>
+        <button onclick="closeSavePlanModal()" type="button" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+
+      <div style="padding:22px;overflow-y:auto;flex:1">
+        <!-- Summary box -->
+        <div style="background:var(--panel-alt);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px">
+              ${isTa ? "தற்போதைய பிளான் சுருக்கம்" : "Current Plan Summary"}
+            </span>
+            <span class="pill" style="background:#dcfce7;color:#15803d;font-weight:700;font-size:11px">
+              ✓ ${plannedKeys.length} ${isTa ? "உணவுகள்" : "Meals"} (${activeDaysSet.size} ${isTa ? "நாட்கள்" : "Days"})
+            </span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            ${previewChips}
+            ${plannedKeys.length > 6 ? `<span class="pill" style="font-size:11px;padding:3px 8px">+${plannedKeys.length - 6} more</span>` : ""}
+          </div>
+        </div>
+
+        <!-- Plan Name Input -->
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--text)">
+            ${isTa ? "பிளானின் பெயர் (Plan / Template Name):" : "Plan / Menu Name:"}
+          </label>
+          <input id="savePlanNameInput" type="text" value="${esc(defaultName)}" placeholder="${isTa ? 'எ.கா. தென்னிந்திய ஸ்பெஷல், வழக்கமான வார உணவு...' : 'e.g. South Indian Favorites, Regular Weekly Menu...'}" style="width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-size:14px;font-weight:600">
+        </div>
+
+        <!-- Quick Tags Suggestions -->
+        <div style="margin-bottom:18px">
+          <small style="color:var(--muted);font-size:11.5px;font-weight:700;display:block;margin-bottom:6px">
+            ⚡ ${isTa ? "விரைவு தலைப்புகள் (Quick Presets):" : "Quick Title Suggestions:"}
+          </small>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="plan-tag-pill" onclick="setSavePlanTag('${isTa ? "வழக்கமான வார உணவு" : "Regular Weekly Menu"}')">🏷️ ${isTa ? "வழக்கமான உணவு" : "Regular Menu"}</span>
+            <span class="plan-tag-pill" onclick="setSavePlanTag('${isTa ? "தென்னிந்திய ஸ்பெஷல் மெனு" : "South Indian Specials"}')">🏷️ ${isTa ? "தென்னிந்திய ஸ்பெஷல்" : "South Indian"}</span>
+            <span class="plan-tag-pill" onclick="setSavePlanTag('${isTa ? "எளிய & விரைவு மெனு" : "Quick & Easy Week"}')">🏷️ ${isTa ? "எளிய & விரைவு" : "Quick & Easy"}</span>
+            <span class="plan-tag-pill" onclick="setSavePlanTag('${isTa ? "சைவ ஆரோக்கிய உணவு" : "Healthy Vegetarian Week"}')">🏷️ ${isTa ? "சைவ ஆரோக்கியம்" : "Veg Healthy"}</span>
+            <span class="plan-tag-pill" onclick="setSavePlanTag('${isTa ? "ஞாயிறு விருந்து ஸ்பெஷல்" : "Weekend Feast Menu"}')">🏷️ ${isTa ? "விருந்து ஸ்பெஷல்" : "Feast Menu"}</span>
+          </div>
+        </div>
+
+        <!-- Options check -->
+        <div style="background:var(--panel-alt);border:1px solid var(--line);border-radius:12px;padding:12px 14px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text);margin:0">
+            <input type="checkbox" id="savePreferencesCheck" checked style="width:16px;height:16px">
+            <span>${isTa ? "கூடுதல் மளிகைப் பொருட்கள் & நீக்கிய பொருட்களின் விருப்பங்களையும் உடன் சேமி" : "Include custom extra grocery items & excluded ingredients preference"}</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="padding:14px 22px;background:var(--panel-alt);border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn alt" onclick="closeSavePlanModal()">
+          ${isTa ? "ரத்து செய்" : "Cancel"}
+        </button>
+        <button type="button" class="btn" onclick="submitSavePlan('${esc(defaultName)}')" style="background:#10b981;border-color:#10b981;color:#fff;font-weight:700">
+          💾 ${isTa ? "பிளானை சேமிக்க" : "Save Plan Now"}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+  backdrop.onclick = e => { if (e.target === backdrop) closeSavePlanModal(); };
+
+  setTimeout(() => {
+    const inp = document.getElementById("savePlanNameInput");
+    if (inp) { inp.focus(); inp.select(); }
+  }, 100);
+}
+
+function setSavePlanTag(tagName) {
+  const inp = document.getElementById("savePlanNameInput");
+  if (inp) {
+    inp.value = tagName;
+    inp.focus();
+  }
+}
+
+async function submitSavePlan(defaultFallback) {
+  const isTa = lang() === "ta";
+  const inp = document.getElementById("savePlanNameInput");
+  const planName = (inp && inp.value.trim()) ? inp.value.trim() : defaultFallback;
+  const includePrefs = document.getElementById("savePreferencesCheck")?.checked ?? true;
+
+  const newPlanItem = {
+    id: Date.now(),
+    name: planName,
+    plan_data: {
+      plan: { ...weeklyPlan },
+      excluded: includePrefs ? [...excludedIngredients] : [],
+      customItems: includePrefs ? [...customItems] : []
+    },
+    created_at: new Date().toISOString()
+  };
+
+  savedMealPlans.unshift(newPlanItem);
+  saveSavedMealPlansToStorage();
+
+  // Sync to backend if logged in
+  if (typeof getToken === "function" && getToken()) {
+    try {
+      await api("/users/me/saved-meal-plans", {
+        method: "POST",
+        body: JSON.stringify(newPlanItem)
+      });
+    } catch (e) {
+      console.warn("Could not sync saved plan to cloud:", e);
+    }
+  }
+
+  closeSavePlanModal();
+
+  showToast(
+    isTa
+      ? `✅ "${planName}" அடுத்த முறைக்கு சேமிக்கப்பட்டது! "சேமித்த பிளான்கள்" வழியே எப்போது வேண்டுமானாலும் இதை அட்டவணையில் ஏற்கலாம்.`
+      : `✅ "${planName}" saved for next time! You can load it anytime from "Saved Plans".`,
+    "success"
+  );
+}
+
+// ----------------------------------------------------
+// SAVED PLANS MANAGER & LOADER MODAL
+// ----------------------------------------------------
+
+function closeSavedPlansModal() {
+  const m = document.getElementById("cookshare-saved-plans-modal");
+  if (m) m.remove();
+}
+
+function openSavedPlansModal() {
+  const isTa = lang() === "ta";
+  closeSavedPlansModal();
+
+  const backdrop = document.createElement("div");
+  backdrop.id = "cookshare-saved-plans-modal";
+  backdrop.className = "plan-modal-backdrop";
+
+  backdrop.innerHTML = `
+    <div class="plan-modal-card" role="dialog" aria-modal="true" style="max-width:680px">
+      <div class="plan-modal-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px">
+            📂
+          </div>
+          <div>
+            <h3 style="margin:0;font-size:1.15rem;font-weight:700">
+              ${isTa ? "சேமித்த உணவு பிளான்கள் (Saved Meal Plans)" : "Your Saved Meal Plans"}
+            </h3>
+            <small style="opacity:0.9;font-size:12px;display:block">
+              ${isTa ? "முன்பு சேமித்த வார அட்டவணையை ஒரே கிளிக்கில் இப்போதைய அட்டவணையில் ஏற்றுக" : "Load any previously saved week directly into your schedule"}
+            </small>
+          </div>
+        </div>
+        <button onclick="closeSavedPlansModal()" type="button" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+
+      <div id="savedPlansModalBody" style="padding:20px;overflow-y:auto;flex:1">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div style="padding:14px 22px;background:var(--panel-alt);border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <button type="button" class="btn small" onclick="openSavePlanModal()" style="background:#10b981;border-color:#10b981;color:#fff;font-weight:700">
+          ➕ ${isTa ? "இப்போதைய வாரத்தை புதிய பிளானாக சேமிக்க" : "Save Current Week as New Plan"}
+        </button>
+        <button type="button" class="btn small alt" onclick="closeSavedPlansModal()">
+          ${isTa ? "மூடு" : "Close"}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+  backdrop.onclick = e => { if (e.target === backdrop) closeSavedPlansModal(); };
+
+  renderSavedPlansCardsList();
+}
+
+function renderSavedPlansCardsList() {
+  const container = document.getElementById("savedPlansModalBody");
+  if (!container) return;
+  const isTa = lang() === "ta";
+
+  if (!savedMealPlans || !savedMealPlans.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:32px 16px">
+        <div style="font-size:48px;margin-bottom:12px">📅</div>
+        <h4 style="font-size:1.15rem;margin:0 0 6px">${isTa ? "சேமித்த பிளான்கள் எதுவும் இல்லை" : "No Saved Meal Plans Yet"}</h4>
+        <p class="muted" style="font-size:0.88rem;max-width:440px;margin:0 auto 20px">
+          ${isTa
+            ? "நீங்கள் திட்டமிடும் வார உணவுகளை மேலே உள்ள 'அடுத்த முறைக்கு சேமி' பட்டன் மூலம் சேமித்து, எதிர்காலத்தில் ஒரே கிளிக்கில் மீண்டும் பயன்படுத்தலாம்!"
+            : "Plan your weekly meals above and click 'Save for Next Time'. Next week, you can reload all meals in 1-click!"}
+        </p>
+        <button class="btn" onclick="loadStarterTamilMenu()" style="background:linear-gradient(135deg, #f97316 0%, #ea580c 100%);color:#fff;font-weight:700;padding:10px 20px;border:none;box-shadow:0 4px 14px rgba(249,115,22,0.3)">
+          ✨ ${isTa ? "தென்னிந்திய மாதிரி வார அட்டவணையை ஏற்று (Starter Balanced Menu)" : "Load Starter Balanced Tamil Menu (7 Days)"}
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <strong style="font-size:0.92rem;color:var(--text)">
+        ${isTa ? `மொத்தம் ${savedMealPlans.length} பிளான்கள் சேமிக்கப்பட்டுள்ளன:` : `You have ${savedMealPlans.length} saved meal plan(s):`}
+      </strong>
+      <button class="btn small alt" onclick="loadStarterTamilMenu()" style="font-size:11px;padding:4px 9px" title="Add pre-curated 7-day balanced Tamil menu">
+        ✨ ${isTa ? "+ மாதிரி மெனு சேர்" : "+ Add Starter Menu"}
+      </button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${savedMealPlans.map(plan => {
+        const pData = plan.plan_data || {};
+        const pPlan = pData.plan || {};
+        const planKeys = Object.keys(pPlan).filter(k => pPlan[k]);
+        const mealsCount = planKeys.length;
+
+        const dateStr = plan.created_at
+          ? new Date(plan.created_at).toLocaleDateString(isTa ? "ta-IN" : "en-US", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            })
+          : "";
+
+        return `
+          <div class="saved-plan-card" id="savedCard_${plan.id}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <h4 style="margin:0;font-size:1.05rem;color:var(--text);font-weight:700">
+                    ${esc(plan.name)}
+                  </h4>
+                  <span class="pill" style="font-size:11px;background:#dcfce7;color:#15803d;border-color:#bbf7d0;font-weight:700">
+                    ✓ ${mealsCount} ${isTa ? "உணவுகள்" : "Meals"}
+                  </span>
+                </div>
+                ${dateStr ? `<small class="muted" style="display:block;margin-top:4px;font-size:11.5px">📅 ${isTa ? "சேமிக்கப்பட்ட தேதி: " + dateStr : "Saved: " + dateStr}</small>` : ""}
+              </div>
+
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <button class="btn small" onclick="applySavedPlan('${plan.id}')" style="background:#10b981;border-color:#10b981;color:#fff;font-weight:700;display:inline-flex;align-items:center;gap:5px" title="Apply this saved plan into your current Monday-Sunday schedule">
+                  <span>✨ ${isTa ? "இதை ஏற்று" : "Apply to Schedule"}</span>
+                </button>
+                <button class="btn small alt" onclick="renameSavedPlan('${plan.id}')" title="Rename this plan" style="font-size:12px;padding:5px 9px">
+                  ✏️
+                </button>
+                <button class="delete-item-btn" onclick="deleteSavedPlan('${plan.id}')" title="Delete this plan" style="padding:5px 9px">
+                  🗑
+                </button>
+              </div>
+            </div>
+
+            <!-- Preview Toggle -->
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+              <button class="btn small alt" onclick="togglePlanPreview('${plan.id}')" style="font-size:11.5px;padding:4px 10px;font-weight:600;display:inline-flex;align-items:center;gap:4px">
+                <span id="previewArrow_${plan.id}">👁️</span>
+                <span>${isTa ? "உணவுகள் முன்னோட்டம்" : "Preview Menu Breakdown"} (${mealsCount} ${isTa ? "உணவுகள்" : "dishes"})</span>
+              </button>
+              <div id="previewBreakdown_${plan.id}" style="display:none;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px">
+                ${renderPlanBreakdownHTML(pPlan)}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function togglePlanPreview(planId) {
+  const box = document.getElementById(`previewBreakdown_${planId}`);
+  if (!box) return;
+  const isHidden = box.style.display === "none";
+  box.style.display = isHidden ? "block" : "none";
+}
+
+function renderPlanBreakdownHTML(planObj) {
+  const isTa = lang() === "ta";
+  const keys = Object.keys(planObj || {}).filter(k => planObj[k]);
+
+  if (!keys.length) {
+    return `<small class="muted">${isTa ? "உணவுகள் எதுவும் இல்லை" : "No meals inside this plan."}</small>`;
+  }
+
+  // Group by day
+  const grouped = {};
+  for (const k of keys) {
+    const [dKey, mKey] = k.split("_");
+    if (!grouped[dKey]) grouped[dKey] = [];
+    const r = allRecipes.find(x => x.id === planObj[k]);
+    const mObj = MEAL_TYPES.find(m => m.key === mKey);
+    const title = r ? (isTa ? (r.title_ta || r.title) : r.title) : `Recipe #${planObj[k]}`;
+    grouped[dKey].push({
+      mealLabel: mObj ? (isTa ? mObj.ta : mObj.en) : mKey,
+      icon: mObj ? mObj.icon : "🍽️",
+      title
+    });
+  }
+
+  return Object.keys(grouped).map(dKey => {
+    const dObj = DAYS.find(d => d.key === dKey);
+    const dayLabel = dObj ? (isTa ? dObj.ta : dObj.en) : dKey;
+    const meals = grouped[dKey];
+
+    return `
+      <div class="day-preview-row">
+        <strong style="min-width:75px;color:var(--primary);font-size:12px">📅 ${dayLabel}:</strong>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1">
+          ${meals.map(m => `
+            <span class="pill" style="font-size:11px;padding:2px 7px">
+              ${m.icon} <b>${m.mealLabel}:</b> ${esc(m.title)}
+            </span>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function applySavedPlan(planId) {
+  const isTa = lang() === "ta";
+  const planItem = savedMealPlans.find(p => String(p.id) === String(planId));
+
+  if (!planItem) {
+    showToast(isTa ? "பிளான் கிடைக்கவில்லை!" : "Saved plan not found!", "error");
+    return;
+  }
+
+  const pData = planItem.plan_data || {};
+  const currentPlannedCount = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]).length;
+
+  if (currentPlannedCount > 0) {
+    const ok = confirm(
+      isTa
+        ? `"${planItem.name}"-ஐ உங்கள் தற்போதைய வார அட்டவணையில் ஏற்றவா?\n(குறிப்பு: தற்போதைய உணவுகள் இந்த பிளானால் மாற்றப்படும்)`
+        : `Load "${planItem.name}" into your weekly schedule?\n(Note: Your current week's schedule will be updated with this plan)`
+    );
+    if (!ok) return;
+  }
+
+  // Apply plan
+  weeklyPlan = { ...(pData.plan || {}) };
+  if (Array.isArray(pData.excluded)) {
+    excludedIngredients = [...pData.excluded];
+  }
+  if (Array.isArray(pData.customItems)) {
+    customItems = [...pData.customItems];
+  }
+
+  saveState();
+  syncMealPlanToCloudDebounced();
+  renderSchedule();
+  renderAddedMeals();
+  renderGroceryList();
+
+  closeSavedPlansModal();
+
+  showToast(
+    isTa
+      ? `🎉 "${planItem.name}" உங்கள் வார அட்டவணையில் வெற்றிகரமாக ஏற்றப்பட்டது!`
+      : `🎉 Successfully loaded "${planItem.name}" into your weekly schedule!`,
+    "success"
+  );
+}
+
+function renameSavedPlan(planId) {
+  const isTa = lang() === "ta";
+  const planItem = savedMealPlans.find(p => String(p.id) === String(planId));
+  if (!planItem) return;
+
+  const newName = prompt(
+    isTa ? "புதிய பெயரை உள்ளிடவும்:" : "Enter new plan name:",
+    planItem.name
+  );
+
+  if (!newName || !newName.trim() || newName.trim() === planItem.name) return;
+
+  planItem.name = newName.trim();
+  saveSavedMealPlansToStorage();
+
+  if (typeof getToken === "function" && getToken()) {
+    api(`/users/me/saved-meal-plans/${planId}`, {
+      method: "PUT",
+      body: JSON.stringify({ name: newName.trim() })
+    }).catch(() => {});
+  }
+
+  renderSavedPlansCardsList();
+  showToast(isTa ? "பெயர் மாற்றப்பட்டது!" : "Plan renamed successfully!", "success");
+}
+
+function deleteSavedPlan(planId) {
+  const isTa = lang() === "ta";
+  const planItem = savedMealPlans.find(p => String(p.id) === String(planId));
+  if (!planItem) return;
+
+  const ok = confirm(
+    isTa
+      ? `"${planItem.name}" பிளானை நீக்கவா?`
+      : `Are you sure you want to delete "${planItem.name}"?`
+  );
+  if (!ok) return;
+
+  savedMealPlans = savedMealPlans.filter(p => String(p.id) !== String(planId));
+  saveSavedMealPlansToStorage();
+
+  if (typeof getToken === "function" && getToken()) {
+    api(`/users/me/saved-meal-plans/${planId}`, {
+      method: "DELETE"
+    }).catch(() => {});
+  }
+
+  renderSavedPlansCardsList();
+  showToast(isTa ? "பிளான் நீக்கப்பட்டது!" : "Saved plan deleted!", "info");
+}
+
+// Quick 1-click repeat current plan or open saved plans
+function quickRepeatCurrentPlan() {
+  const isTa = lang() === "ta";
+  const plannedCount = Object.keys(weeklyPlan).filter(k => weeklyPlan[k]).length;
+
+  if (plannedCount > 0) {
+    openSavePlanModal();
+    setTimeout(() => {
+      const inp = document.getElementById("savePlanNameInput");
+      if (inp) {
+        inp.value = isTa ? `அடுத்த வார உணவு (${new Date().toLocaleDateString("ta-IN")})` : `Repeat Next Week Menu (${new Date().toLocaleDateString()})`;
+        inp.focus();
+        inp.select();
+      }
+    }, 150);
+  } else if (savedMealPlans.length > 0) {
+    openSavedPlansModal();
+  } else {
+    showToast(
+      isTa
+        ? "முதலில் சில உணவுகளை திட்டமிடுங்கள் அல்லது கீழே உள்ள 'மாதிரி வார மெனு'-வை பயன்படுத்துங்கள்!"
+        : "Please schedule some meals first or try the starter menu!",
+      "info"
+    );
+    loadStarterTamilMenu();
+  }
+}
+
+// Generate pre-curated 7-day starter Tamil balanced menu
+function loadStarterTamilMenu() {
+  const isTa = lang() === "ta";
+
+  if (!allRecipes || !allRecipes.length) {
+    showToast(isTa ? "செய்முறைகள் இன்னும் ஏற்றப்படுகின்றன..." : "Recipes are still loading...", "info");
+    return;
+  }
+
+  // Find recipes by keywords or fallback to first recipes
+  const findR = (kw) => {
+    const m = allRecipes.find(r => (r.title + " " + (r.title_ta || "") + " " + (r.cuisine || "")).toLowerCase().includes(kw.toLowerCase()));
+    return m ? m.id : allRecipes[0]?.id;
+  };
+
+  const starterPlan = {};
+
+  // Mon: Pongal / Chettinad Chicken or Rice / Dosa / Tea
+  starterPlan["Monday_Breakfast"] = findR("pongal") || allRecipes[0]?.id;
+  starterPlan["Monday_Lunch"] = findR("chettinad") || findR("chicken") || allRecipes[1]?.id;
+  starterPlan["Monday_Dinner"] = findR("dosa") || allRecipes[2]?.id;
+  starterPlan["Monday_Snack"] = findR("tea") || allRecipes[3]?.id;
+
+  // Tue
+  starterPlan["Tuesday_Breakfast"] = findR("idli") || allRecipes[0]?.id;
+  starterPlan["Tuesday_Lunch"] = findR("sambar") || allRecipes[1]?.id;
+  starterPlan["Tuesday_Dinner"] = findR("wrap") || findR("roti") || allRecipes[2]?.id;
+  starterPlan["Tuesday_Snack"] = findR("snack") || allRecipes[3]?.id;
+
+  // Wed
+  starterPlan["Wednesday_Breakfast"] = findR("bowl") || allRecipes[0]?.id;
+  starterPlan["Wednesday_Lunch"] = findR("rice") || allRecipes[1]?.id;
+  starterPlan["Wednesday_Dinner"] = findR("pasta") || allRecipes[2]?.id;
+
+  // Thu
+  starterPlan["Thursday_Breakfast"] = findR("pongal") || allRecipes[0]?.id;
+  starterPlan["Thursday_Lunch"] = findR("chickpea") || allRecipes[1]?.id;
+  starterPlan["Thursday_Dinner"] = findR("dosa") || allRecipes[2]?.id;
+
+  // Fri
+  starterPlan["Friday_Breakfast"] = findR("idli") || allRecipes[0]?.id;
+  starterPlan["Friday_Lunch"] = findR("biryani") || findR("rice") || allRecipes[1]?.id;
+  starterPlan["Friday_Dinner"] = findR("paneer") || allRecipes[2]?.id;
+
+  // Sat & Sun
+  starterPlan["Saturday_Lunch"] = findR("chettinad") || allRecipes[0]?.id;
+  starterPlan["Saturday_Dinner"] = findR("wrap") || allRecipes[1]?.id;
+  starterPlan["Sunday_Lunch"] = findR("chicken") || findR("biryani") || allRecipes[0]?.id;
+  starterPlan["Sunday_Dinner"] = findR("dosa") || allRecipes[1]?.id;
+
+  const starterItem = {
+    id: Date.now(),
+    name: isTa ? "தென்னிந்திய மாதிரி வார உணவு (Starter Balanced Menu)" : "Tamil Balanced Week Menu (Starter)",
+    plan_data: {
+      plan: starterPlan,
+      excluded: [],
+      customItems: []
+    },
+    created_at: new Date().toISOString()
+  };
+
+  savedMealPlans.unshift(starterItem);
+  saveSavedMealPlansToStorage();
+
+  if (typeof getToken === "function" && getToken()) {
+    api("/users/me/saved-meal-plans", {
+      method: "POST",
+      body: JSON.stringify(starterItem)
+    }).catch(() => {});
+  }
+
+  // Automatically apply it
+  weeklyPlan = { ...starterPlan };
+  saveState();
+  syncMealPlanToCloudDebounced();
+  renderSchedule();
+  renderAddedMeals();
+  renderGroceryList();
+
+  closeSavedPlansModal();
+
+  showToast(
+    isTa
+      ? "✨ மாதிரி வார அட்டவணை வெற்றிகரமாக அட்டவணையில் வைக்கப்பட்டது! 'அடுத்த முறைக்கு சேமி' கொண்டு விருப்பத்திற்கேற்ப மாற்றலாம்."
+      : "✨ Starter Balanced Menu loaded into your weekly schedule! You can customize and save it anytime.",
+    "success"
+  );
 }
 
 initPlanner();

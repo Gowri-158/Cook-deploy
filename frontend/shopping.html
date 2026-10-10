@@ -133,6 +133,18 @@
       <p class="muted">Items are automatically organized by dish/recipe menu. Filter by dish to view only what you need to cook!</p>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn whatsapp-btn" onclick="openShoppingWhatsAppModal()" title="Send shopping checklist as WhatsApp message">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm.01 16.59c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.04 8.04 0 01-1.23-4.28c0-4.46 3.63-8.09 8.09-8.09 2.16 0 4.19.84 5.72 2.37 1.53 1.53 2.37 3.56 2.37 5.72 0 4.46-3.63 8.14-8.16 8.14zm4.44-6.09c-.24-.12-1.44-.71-1.66-.79-.22-.09-.39-.12-.55.12-.17.24-.64.79-.79.95-.14.17-.29.19-.53.07-.24-.12-1.03-.38-1.96-1.21-.72-.64-1.21-1.44-1.35-1.68-.14-.24-.02-.37.1-.49.11-.11.24-.29.37-.43.12-.14.17-.24.25-.4.08-.17.04-.31-.02-.43-.07-.12-.55-1.33-.76-1.82-.2-.48-.41-.41-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.24-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.78 2.71 4.3 3.8.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28z"/>
+        </svg>
+        <span>📲 WhatsApp-ல் அனுப்ப (Share to WhatsApp)</span>
+      </button>
+      <button class="btn email-btn" onclick="openShoppingEmailModal()" title="Send shopping checklist as Email / Gmail">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <span>📧 Email-ல் அனுப்ப (Share via Email)</span>
+      </button>
       <button class="btn" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 4px 14px rgba(5,150,105,0.3)" onclick="syncFromMealPlanner()" title="Import active Weekly Meal Planner list">
         📅 Load Meal Planner List
       </button>
@@ -326,9 +338,14 @@ async function load() {
             <span>${esc(dishName)}</span>
             <span class="pill" style="font-size:11px;font-weight:800;background:var(--primary-soft);color:var(--primary)">${items.length} items</span>
           </h4>
-          <button class="delete-dish-btn" onclick="clearDish('${esc(dishName)}')" title="Remove this dish's ingredients from shopping list">
-            🗑 Remove Dish
-          </button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="btn small whatsapp-btn" style="padding:4px 10px;font-size:11.5px;font-weight:700" onclick="openShoppingWhatsAppModal('${esc(dishName)}')" title="Share ${esc(dishName)} ingredients to WhatsApp">
+              📲 WhatsApp
+            </button>
+            <button class="delete-dish-btn" onclick="clearDish('${esc(dishName)}')" title="Remove this dish's ingredients from shopping list">
+              🗑 Remove Dish
+            </button>
+          </div>
         </div>
         <div>
           ${items.map(x => `
@@ -657,6 +674,53 @@ async function checkRecipeParam() {
       console.error("Error importing recipe ingredients:", e);
     }
   }
+}
+
+function openShoppingWhatsAppModal(specificDish = null) {
+  if (!allShoppingItems || !allShoppingItems.length) {
+    showToast(lang() === "ta" ? "ஷாப்பிங் பட்டியலில் பொருட்கள் எதுவும் இல்லை!" : "Shopping list is currently empty!", "error");
+    return;
+  }
+
+  // Collect unique dishes
+  const dishesMap = {};
+  for (const item of allShoppingItems) {
+    const dish = String(item.dish_name || item.category || "General Groceries").trim();
+    if (!dishesMap[dish]) dishesMap[dish] = true;
+  }
+  const uniqueDishes = Object.keys(dishesMap);
+  const targetDish = specificDish || (activeDishFilter !== "all" ? activeDishFilter : "all");
+
+  openWhatsAppModal({
+    items: allShoppingItems,
+    dishes: uniqueDishes,
+    defaultDish: targetDish,
+    showPendingToggle: true
+  });
+}
+
+function openShoppingEmailModal(specificDish = null) {
+  if (!allShoppingItems || !allShoppingItems.length) {
+    showToast(lang() === "ta" ? "ஷாப்பிங் பட்டியலில் பொருட்கள் எதுவும் இல்லை!" : "Shopping list is currently empty!", "error");
+    return;
+  }
+
+  // Collect unique dishes
+  const dishesMap = {};
+  for (const item of allShoppingItems) {
+    const dish = String(item.dish_name || item.category || "General Groceries").trim();
+    if (!dishesMap[dish]) dishesMap[dish] = true;
+  }
+  const uniqueDishes = Object.keys(dishesMap);
+  const targetDish = specificDish || (activeDishFilter !== "all" ? activeDishFilter : "all");
+
+  openEmailModal({
+    title: lang() === "ta" ? "🛒 குக்ஷேர் - மளிகைப் பட்டியல்" : "🛒 CookShare - Grocery & Shopping List",
+    items: allShoppingItems,
+    dishes: uniqueDishes,
+    defaultDish: targetDish,
+    showPendingToggle: true
+  });
 }
 
 async function initShoppingPage() {

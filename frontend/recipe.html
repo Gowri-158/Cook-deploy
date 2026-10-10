@@ -75,20 +75,577 @@ let currentRecipe = null;
 let currentServings = 4;
 let baseServings = 4;
 let selectedRating = 5;
+let currentSlideIndex = 0;
+let currentCarouselVideos = [];
 
-function ytEmbed(url) {
+const RECIPE_VIDEOS_MAP = {
+  1: [ // AUTHENTIC CHETTINAD CHICKEN PEPPER MASALA
+    {
+      id: "dq3__hTaSLk",
+      title: "செட்டிநாடு மிளகு சிக்கன் மசாலா | Chettinad Pepper Chicken Masala In Tamil",
+      channel: "HomeCooking Tamil",
+      url: "https://www.youtube.com/watch?v=dq3__hTaSLk",
+      thumbnail: "https://img.youtube.com/vi/dq3__hTaSLk/hqdefault.jpg"
+    },
+    {
+      id: "Uiw4Cl86NMw",
+      title: "Chettinad Pepper Chicken | Chicken Fry in Tamil | Studio First Recipe",
+      channel: "Chef Deena’s Kitchen",
+      url: "https://www.youtube.com/watch?v=Uiw4Cl86NMw",
+      thumbnail: "https://img.youtube.com/vi/Uiw4Cl86NMw/hqdefault.jpg"
+    },
+    {
+      id: "5T7PUj7jQfg",
+      title: "Pepper Chicken Recipe in Tamil / Chicken Milagu Varuval",
+      channel: "Madras Samayal",
+      url: "https://www.youtube.com/watch?v=5T7PUj7jQfg",
+      thumbnail: "https://img.youtube.com/vi/5T7PUj7jQfg/hqdefault.jpg"
+    },
+    {
+      id: "kcbOO-e2NF8",
+      title: "கல்யாண விருந்து சிக்கன் மிளகு வறுவல் | Madurai Wedding Style Pepper Chicken",
+      channel: "Chef Deena’s Kitchen",
+      url: "https://www.youtube.com/watch?v=kcbOO-e2NF8",
+      thumbnail: "https://img.youtube.com/vi/kcbOO-e2NF8/hqdefault.jpg"
+    },
+    {
+      id: "VgMxyu4Xigw",
+      title: "Pepper Chicken in Tamil Easy Method | Easy Chicken Recipe",
+      channel: "Chef YKU",
+      url: "https://www.youtube.com/watch?v=VgMxyu4Xigw",
+      thumbnail: "https://img.youtube.com/vi/VgMxyu4Xigw/hqdefault.jpg"
+    }
+  ],
+  2: [ // CRISPY GHEE PODI MASALA DOSA
+    {
+      id: "pp8QFH1veuM",
+      title: "நெய் பொடி தோசை | Restaurant Style Ghee Podi Dosa | Spicy Ghee Podi Roast",
+      channel: "MALA SAMAYAL",
+      url: "https://www.youtube.com/watch?v=pp8QFH1veuM",
+      thumbnail: "https://img.youtube.com/vi/pp8QFH1veuM/hqdefault.jpg"
+    },
+    {
+      id: "kILA-FsjcVA",
+      title: "அட! இதுவல்லவா தோசை! கும்பகோணம் தேங்காய் பொடி தோசை A to Z செய்முறை!",
+      channel: "Chef Deena’s Kitchen",
+      url: "https://www.youtube.com/watch?v=kILA-FsjcVA",
+      thumbnail: "https://img.youtube.com/vi/kILA-FsjcVA/hqdefault.jpg"
+    },
+    {
+      id: "s-sqVGqRysY",
+      title: "பொடி தோசை | Podi Dosa in Tamil | How to Make Podi Dosai | Breakfast Recipe",
+      channel: "Tamilmozhi Samayal",
+      url: "https://www.youtube.com/watch?v=s-sqVGqRysY",
+      thumbnail: "https://img.youtube.com/vi/s-sqVGqRysY/hqdefault.jpg"
+    },
+    {
+      id: "LsdYcE_02Bc",
+      title: "Hotel Style Ghee Podi Dosa | Breakfast Recipe | Dosa Recipes in Tamil",
+      channel: "Atifa's Recipes",
+      url: "https://www.youtube.com/watch?v=LsdYcE_02Bc",
+      thumbnail: "https://img.youtube.com/vi/LsdYcE_02Bc/hqdefault.jpg"
+    },
+    {
+      id: "kcYQAk-o3z0",
+      title: "Famous Ghee PODI ONION DOSA | பொடி தோசை | Onion Podi Dosa in Tamil",
+      channel: "Ranjana's View",
+      url: "https://www.youtube.com/watch?v=kcYQAk-o3z0",
+      thumbnail: "https://img.youtube.com/vi/kcYQAk-o3z0/hqdefault.jpg"
+    }
+  ],
+  3: [ // ROYAL AMBUR MUTTON DUM BIRYANI
+    {
+      id: "5VpZd64NRo8",
+      title: "Ambur Mutton Biryani Recipe in Tamil | ஆம்பூர் பிரியாணி | CDK #421",
+      channel: "Chef Deena’s Kitchen",
+      url: "https://www.youtube.com/watch?v=5VpZd64NRo8",
+      thumbnail: "https://img.youtube.com/vi/5VpZd64NRo8/hqdefault.jpg"
+    },
+    {
+      id: "rCv2JSvXGek",
+      title: "Ambur Mutton Biryani Recipe | How to Make Dum Biryani | CDC 35",
+      channel: "Chef Deena's Reel Recipes",
+      url: "https://www.youtube.com/watch?v=rCv2JSvXGek",
+      thumbnail: "https://img.youtube.com/vi/rCv2JSvXGek/hqdefault.jpg"
+    },
+    {
+      id: "8MUf486RqKE",
+      title: "Ambur Mutton Biryani | ஆம்பூர் மட்டன் பிரியாணி | Mutton Biryani Recipe in Tamil",
+      channel: "Chef YKU",
+      url: "https://www.youtube.com/watch?v=8MUf486RqKE",
+      thumbnail: "https://img.youtube.com/vi/8MUf486RqKE/hqdefault.jpg"
+    },
+    {
+      id: "IFAf2PzhDcE",
+      title: "Ambur Mutton Biryani Recipe | Mutton Biryani in Pressure Cooker",
+      channel: "Dindigul Food Court",
+      url: "https://www.youtube.com/watch?v=IFAf2PzhDcE",
+      thumbnail: "https://img.youtube.com/vi/IFAf2PzhDcE/hqdefault.jpg"
+    },
+    {
+      id: "Ymg6iVOfqIw",
+      title: "Mutton Biryani in Pressure Cooker | Easy Mutton Biryani Recipe in Tamil",
+      channel: "Piyas Kitchen",
+      url: "https://www.youtube.com/watch?v=Ymg6iVOfqIw",
+      thumbnail: "https://img.youtube.com/vi/Ymg6iVOfqIw/hqdefault.jpg"
+    }
+  ],
+  4: [ // CREAMY SHAHI PANEER BUTTER MASALA
+    {
+      id: "QPMaHm5ta6U",
+      title: "ஷாஹி பன்னீர் | Shahi Paneer Recipe with English Subtitles | Shahi Paneer in Tamil",
+      channel: "Recipes Desk",
+      url: "https://www.youtube.com/watch?v=QPMaHm5ta6U",
+      thumbnail: "https://img.youtube.com/vi/QPMaHm5ta6U/hqdefault.jpg"
+    },
+    {
+      id: "CU634mw6yVQ",
+      title: "Shahi Paneer Recipe Restaurant Style in Tamil | Creamy Shahi Paneer Gravy",
+      channel: "Afra's Food Channel",
+      url: "https://www.youtube.com/watch?v=CU634mw6yVQ",
+      thumbnail: "https://img.youtube.com/vi/CU634mw6yVQ/hqdefault.jpg"
+    },
+    {
+      id: "Yr2BprrJ3Bk",
+      title: "ஷாஹி பன்னீர் | Shahi Paneer Recipe in Tamil",
+      channel: "Ramesh Arumugam",
+      url: "https://www.youtube.com/watch?v=Yr2BprrJ3Bk",
+      thumbnail: "https://img.youtube.com/vi/Yr2BprrJ3Bk/hqdefault.jpg"
+    },
+    {
+      id: "GQRWgAPQ97E",
+      title: "How to Make Shahi Paneer | Paneer Recipes in Tamil | Hotel Style Paneer Masala",
+      channel: "SudhaSureshDiaries",
+      url: "https://www.youtube.com/watch?v=GQRWgAPQ97E",
+      thumbnail: "https://img.youtube.com/vi/GQRWgAPQ97E/hqdefault.jpg"
+    },
+    {
+      id: "sVNQIbuv_Mc",
+      title: "Paneer Butter Masala Recipe in Tamil | Restaurant Style Paneer Gravy",
+      channel: "Madras Samayal",
+      url: "https://www.youtube.com/watch?v=sVNQIbuv_Mc",
+      thumbnail: "https://img.youtube.com/vi/sVNQIbuv_Mc/hqdefault.jpg"
+    }
+  ],
+  5: [ // VILLAGE DRUMSTICK & SHALLOT SAMBAR
+    {
+      id: "zwvj8--Blpw",
+      title: "முருங்கைகாய் சாம்பார் சுவையாக செய்வது எப்படி / Murungakkai Sambar Recipe In Tamil",
+      channel: "Jenny Cooks",
+      url: "https://www.youtube.com/watch?v=zwvj8--Blpw",
+      thumbnail: "https://img.youtube.com/vi/zwvj8--Blpw/hqdefault.jpg"
+    },
+    {
+      id: "MRA_xDmllzk",
+      title: "சுவையான முருங்கைக்காய் சாம்பார் செய்வது எப்படி | Sambar Recipe in Tamil",
+      channel: "SELVI AMMA SAMAYAL",
+      url: "https://www.youtube.com/watch?v=MRA_xDmllzk",
+      thumbnail: "https://img.youtube.com/vi/MRA_xDmllzk/hqdefault.jpg"
+    },
+    {
+      id: "WPj2Y7053W0",
+      title: "Drumstick Sambar Recipe - Easy Murungakkai Sambar in Tamil",
+      channel: "Padhuskitchen",
+      url: "https://www.youtube.com/watch?v=WPj2Y7053W0",
+      thumbnail: "https://img.youtube.com/vi/WPj2Y7053W0/hqdefault.jpg"
+    },
+    {
+      id: "hlo5u0whiuQ",
+      title: "மிக சுவையான முருங்கைக்காய் சாம்பார் செய்யலாம் வாங்க / Easy Drumstick Sambar",
+      channel: "Niki's Kitchen",
+      url: "https://www.youtube.com/watch?v=hlo5u0whiuQ",
+      thumbnail: "https://img.youtube.com/vi/hlo5u0whiuQ/hqdefault.jpg"
+    },
+    {
+      id: "T3VjljWggqY",
+      title: "முருங்கைக்காய் சாம்பார் செய்வது எப்படி | Murungakkai Sambar Seivathu Eppadi",
+      channel: "Malar Amma Samayal",
+      url: "https://www.youtube.com/watch?v=T3VjljWggqY",
+      thumbnail: "https://img.youtube.com/vi/T3VjljWggqY/hqdefault.jpg"
+    }
+  ],
+  6: [ // TRADITIONAL KAMBU KOOZH
+    {
+      id: "srM2iVzSDMA",
+      title: "Kambu Koozh Recipe (கம்பு கூழ் ) | How to Make Kambu Koozh at Home",
+      channel: "Piyas Kitchen",
+      url: "https://www.youtube.com/watch?v=srM2iVzSDMA",
+      thumbnail: "https://img.youtube.com/vi/srM2iVzSDMA/hqdefault.jpg"
+    },
+    {
+      id: "pjJ6vXp-7Zw",
+      title: "பாரம்பரிய கம்பு கூழ் இப்படி பக்குவமா செய்யுங்க சுவையும் சத்தும் அருமை / Kambu Kool",
+      channel: "Kavitha Samayalarai கவிதா சமையலறை",
+      url: "https://www.youtube.com/watch?v=pjJ6vXp-7Zw",
+      thumbnail: "https://img.youtube.com/vi/pjJ6vXp-7Zw/hqdefault.jpg"
+    },
+    {
+      id: "Pf3aDUdEooE",
+      title: "Kambu Koozh Recipe / Kambu Kool / Bajra Koozh by Revathy Shanmugam",
+      channel: "Revathy Shanmugam",
+      url: "https://www.youtube.com/watch?v=Pf3aDUdEooE",
+      thumbnail: "https://img.youtube.com/vi/Pf3aDUdEooE/hqdefault.jpg"
+    },
+    {
+      id: "_LmIitjY5b4",
+      title: "உடல் சூட்டை குறைக்க, எடை குறைய கம்பு கூழ் / Kambu Koozh Recipe / Pearl Millet Recipe",
+      channel: "Healthy Food Kitchen",
+      url: "https://www.youtube.com/watch?v=_LmIitjY5b4",
+      thumbnail: "https://img.youtube.com/vi/_LmIitjY5b4/hqdefault.jpg"
+    },
+    {
+      id: "l-DoxP_-qOk",
+      title: "அதிக சத்து நிறைந்த சுவையான கம்பு கூழ் / Kambu Kool Recipe in Tamil / Healthy Breakfast",
+      channel: "Healthy Amma Samayal",
+      url: "https://www.youtube.com/watch?v=l-DoxP_-qOk",
+      thumbnail: "https://img.youtube.com/vi/l-DoxP_-qOk/hqdefault.jpg"
+    }
+  ]
+};
+
+function getYtVideoId(url) {
+  if (!url) return null;
   try {
     const u = new URL(url);
-    let id = u.hostname.includes("youtu.be") ? u.pathname.slice(1).split("?")[0] : u.searchParams.get("v");
-    if (id) return "https://www.youtube.com/embed/" + id + "?rel=0&cc_load_policy=1";
-    let sq = u.searchParams.get("search_query");
-    if (sq) return "https://www.youtube.com/embed?listType=search&list=" + encodeURIComponent(sq);
-    if (u.hostname.includes("vimeo.com")) {
-      const id = u.pathname.split("/").filter(Boolean).pop();
-      return "https://player.vimeo.com/video/" + id + "?texttrack=ta";
+    if (u.hostname.includes("youtu.be")) {
+      const id = u.pathname.slice(1).split("?")[0];
+      if (id && id.length >= 8 && !id.includes("results")) return id;
     }
+    const id = u.searchParams.get("v");
+    if (id && id.length >= 8) return id;
   } catch (e) {}
   return null;
+}
+
+function ytEmbed(url) {
+  const vid = getYtVideoId(url);
+  return vid ? `https://www.youtube.com/embed/${vid}` : null;
+}
+
+function getYtThumbnail(url, defaultImg) {
+  const vid = getYtVideoId(url);
+  if (vid) {
+    return `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+  }
+  return defaultImg || "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80";
+}
+
+function getRecipeVideos(r) {
+  if (r.videos && Array.isArray(r.videos) && r.videos.length >= 5) {
+    return r.videos.slice(0, 5).map(v => ({
+      id: v.video_id || getYtVideoId(v.url || v.video_url),
+      title: v.title,
+      channel: v.channel_name || v.channel || "Tamil Cooking",
+      url: v.url || v.video_url,
+      thumbnail: v.thumbnail_url || getYtThumbnail(v.url || v.video_url, r.image_url)
+    }));
+  }
+  if (r.id && RECIPE_VIDEOS_MAP[r.id]) {
+    return RECIPE_VIDEOS_MAP[r.id];
+  }
+  const t = (r.title || "").toLowerCase();
+  if (t.includes("dosa")) return RECIPE_VIDEOS_MAP[2];
+  if (t.includes("biryani")) return RECIPE_VIDEOS_MAP[3];
+  if (t.includes("paneer")) return RECIPE_VIDEOS_MAP[4];
+  if (t.includes("sambar")) return RECIPE_VIDEOS_MAP[5];
+  if (t.includes("chettinad") || t.includes("chicken")) return RECIPE_VIDEOS_MAP[1];
+  if (t.includes("koozh") || t.includes("millet")) return RECIPE_VIDEOS_MAP[6];
+  return RECIPE_VIDEOS_MAP[1];
+}
+
+const RECIPE_GALLERY_MAP = {
+  1: [
+    { url: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1200&q=80", label: "Plated Curry (பரிமாறல்)", caption: "Authentic Chettinad Chicken Pepper Masala" },
+    { url: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=80", label: "Fresh Spices (மசாலா)", caption: "Dry-Roasted Black Peppercorn & Fennel Seeds" },
+    { url: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1200&q=80", label: "Clay Pot Cooking (சமையல்)", caption: "Simmered in Clay Pot with Gingelly Oil" }
+  ],
+  2: [
+    { url: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=1200&q=80", label: "Crispy Dosa (மொறுமொறு தோசை)", caption: "Crispy Ghee Podi Masala Dosa" },
+    { url: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80", label: "Chutney & Sambar (சட்னி)", caption: "Served with Fresh Coconut Chutney & Tiffin Sambar" },
+    { url: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1200&q=80", label: "Potato Masala (உருளை மசாலா)", caption: "Spiced Potato and Onion Stuffing" }
+  ],
+  3: [
+    { url: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=1200&q=80", label: "Dum Handi (பிரியாணி ஹண்டி)", caption: "Royal Ambur Mutton Dum Biryani" },
+    { url: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?auto=format&fit=crop&w=1200&q=80", label: "Seeraga Samba (சீரக சம்பா அரிசி)", caption: "Cooked with Fragrant Short-Grain Seeraga Samba" },
+    { url: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=80", label: "Dalcha & Sides (தால்சா)", caption: "Traditional Sour Brinjal Gravy & Onion Raita" }
+  ],
+  4: [
+    { url: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=1200&q=80", label: "Rich Gravy (பன்னீர் கிரேவி)", caption: "Creamy Shahi Paneer Butter Masala" },
+    { url: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=80", label: "Fresh Cottage Cheese (பன்னீர்)", caption: "Fresh Soft Malai Paneer Cubes" },
+    { url: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1200&q=80", label: "With Naan / Roti (ரோட்டியுடன்)", caption: "Garnished with Kasuri Methi & Cream" }
+  ],
+  5: [
+    { url: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1200&q=80", label: "Village Sambar (கிராமத்து சாம்பார்)", caption: "Village Drumstick & Shallot Sambar" },
+    { url: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80", label: "Drumsticks & Shallots (காய்கறிகள்)", caption: "Tender Drumstick pieces & Peeled Shallots" },
+    { url: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=1200&q=80", label: "Aromatic Tadka (மணக்கும் தாளிப்பு)", caption: "Tempered with Mustard, Fenugreek, Hing & Curry Leaves" }
+  ],
+  6: [
+    { url: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&q=80", label: "Earthen Pot Koozh (மண்பானைக் கூழ்)", caption: "Traditional Fermented Pearl Millet Koozh" },
+    { url: "/images/native_millets.jpg", label: "Native Millets (நாட்டு கம்பு)", caption: "Wholesome Nutritious Pearl Millet Grains (நாட்டு கம்பு)" },
+    { url: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1200&q=80", label: "Side Accompaniment (தொடுகறி)", caption: "Served with Salted Mor Milagai & Onions" }
+  ]
+};
+
+function getRecipeGallery(r) {
+  if (r.id && RECIPE_GALLERY_MAP[r.id]) {
+    return RECIPE_GALLERY_MAP[r.id];
+  }
+  const defaultImg = r.image_url || "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80";
+  return [
+    { url: defaultImg, label: "Main Dish (உணவு)", caption: r.title || "Recipe Plating" }
+  ];
+}
+
+function selectGalleryPhoto(url, caption, el) {
+  const img = document.getElementById("mainShowcaseImg");
+  const cap = document.getElementById("showcaseCaption");
+  if (img) img.src = url;
+  if (cap) cap.textContent = caption;
+  document.querySelectorAll(".gallery-thumb-card").forEach(c => {
+    c.classList.remove("active");
+    c.style.borderColor = "var(--line)";
+  });
+  if (el) {
+    el.classList.add("active");
+    el.style.borderColor = "var(--primary)";
+  }
+}
+
+function openPhotoModal(imgUrl, caption) {
+  const currentImg = document.getElementById("mainShowcaseImg")?.src || imgUrl;
+  window.open(currentImg, "_blank");
+}
+
+function openYouTubeLink(url) {
+  if (url) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+function slideCarousel(direction) {
+  const total = currentCarouselVideos.length || 5;
+  currentSlideIndex = (currentSlideIndex + direction + total) % total;
+  updateCarouselState();
+}
+
+function goToSlide(index) {
+  const total = currentCarouselVideos.length || 5;
+  if (index >= 0 && index < total) {
+    currentSlideIndex = index;
+    updateCarouselState();
+  }
+}
+
+function updateCarouselState() {
+  const track = document.getElementById("carouselTrack");
+  const viewport = document.getElementById("carouselViewport");
+  const total = currentCarouselVideos.length || 5;
+
+  if (track && viewport) {
+    const cards = track.querySelectorAll(".yt-video-card");
+    if (cards.length) {
+      const cardWidth = cards[0].offsetWidth;
+      const gap = 18;
+      const maxScroll = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      const targetOffset = Math.min(currentSlideIndex * (cardWidth + gap), maxScroll);
+      track.style.transform = `translateX(-${targetOffset}px)`;
+
+      cards.forEach((c, idx) => {
+        c.classList.toggle("active-slide", idx === currentSlideIndex);
+      });
+    }
+  }
+
+  // Update dots: ● for active, ○ for inactive
+  for (let i = 0; i < total; i++) {
+    const dot = document.getElementById("ytDot_" + i);
+    if (dot) {
+      const isActive = (i === currentSlideIndex);
+      dot.classList.toggle("active", isActive);
+      dot.textContent = isActive ? "●" : "○";
+    }
+  }
+
+  // Update counters: 1 / 5, 2 / 5, 3 / 5, etc.
+  const counterStr = `${currentSlideIndex + 1} / ${total}`;
+  const badge = document.getElementById("carouselCounterBadge");
+  const counterText = document.getElementById("carouselCounterText");
+  if (badge) badge.textContent = counterStr;
+  if (counterText) counterText.textContent = counterStr;
+}
+
+function initCarouselTouch() {
+  const viewport = document.getElementById("carouselViewport");
+  if (!viewport) return;
+
+  let startX = 0;
+  let startY = 0;
+
+  viewport.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  viewport.addEventListener("touchend", (e) => {
+    if (e.changedTouches.length === 1) {
+      const deltaX = e.changedTouches[0].clientX - startX;
+      const deltaY = e.changedTouches[0].clientY - startY;
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 40) {
+        if (deltaX < 0) {
+          slideCarousel(1); // Swipe left -> Next video
+        } else {
+          slideCarousel(-1); // Swipe right -> Previous video
+        }
+      }
+    }
+  }, { passive: true });
+
+  window.addEventListener("resize", () => {
+    updateCarouselState();
+  });
+}
+
+function renderYouTubeCarousel(recipe, title, isTa) {
+  const videos = getRecipeVideos(recipe);
+  currentCarouselVideos = videos;
+  currentSlideIndex = 0;
+
+  const cardsHtml = videos.map((v, idx) => {
+    const videoUrl = v.url || v.video_url;
+    const thumb = getYtThumbnail(videoUrl, recipe.image_url);
+    const videoNum = idx + 1;
+    const channelName = v.channel || v.channel_name || "Tamil Cooking";
+    return `
+      <div class="yt-video-card ${idx === 0 ? 'active-slide' : ''}" 
+           id="ytCard_${idx}" 
+           onclick="openYouTubeLink('${esc(videoUrl)}')"
+           role="button"
+           tabindex="0"
+           aria-label="Watch ${esc(v.title)} on YouTube">
+        <div class="yt-thumb-wrapper">
+          <img src="${esc(thumb)}" alt="${esc(v.title)}" class="yt-thumb-img" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80'">
+          <div class="yt-play-pill" title="Click to watch">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <span class="yt-badge-index">${videoNum} / 5</span>
+          <span class="yt-badge-bottom">▶ YouTube</span>
+        </div>
+        <div class="yt-card-body">
+          <div class="yt-meta-header">
+            <span class="yt-brand-logo-badge">
+              <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#ff0000" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><polygon fill="#ffffff" points="9.545,15.568 15.818,12 9.545,8.432"/></svg>
+              <span>YouTube</span>
+            </span>
+            <span class="yt-channel-badge" title="${esc(channelName)}">📺 ${esc(channelName)}</span>
+          </div>
+          <h4 class="yt-video-card-title" title="${esc(v.title)}">${esc(v.title)}</h4>
+          <div class="yt-card-footer">
+            <a href="${esc(videoUrl)}" target="_blank" rel="noopener noreferrer" class="yt-watch-action-btn" onclick="event.stopPropagation()">
+              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#ffffff" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><polygon fill="#212121" points="9.545,15.568 15.818,12 9.545,8.432"/></svg>
+              <span>YouTube-ல் பார்க்க</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const dotsHtml = videos.map((_, idx) => `
+    <button class="yt-carousel-dot ${idx === 0 ? 'active' : ''}" 
+            id="ytDot_${idx}" 
+            onclick="goToSlide(${idx})" 
+            aria-label="Go to Video ${idx + 1}">
+      ${idx === 0 ? '●' : '○'}
+    </button>
+  `).join("");
+
+  return `
+    <!-- 5-Video YouTube Carousel Section -->
+    <section id="recipeVideos" class="yt-carousel-section" aria-label="Watch Recipe Videos">
+      <div class="yt-carousel-header">
+        <div class="yt-carousel-title-group">
+          <span class="yt-carousel-top-badge">🎥 5 Verified Tamil Videos</span>
+          <h2>🎥 தமிழில் செய்முறை வீடியோக்கள்</h2>
+          <p>${isTa ? 'இந்த உணவிற்கான 5 பிரத்யேக யூடியூப் சமையல் வீடியோக்கள் (சுழற்றிப் பார்க்கவும்):' : 'Explore 5 verified Tamil cooking demonstrations with step-by-step instructions'}</p>
+        </div>
+        <div class="yt-carousel-counter" id="carouselCounterBadge">
+          1 / 5
+        </div>
+      </div>
+
+      <!-- Layout: ← Previous [Video 1] [Video 2] [Video 3] Next → -->
+      <div class="yt-carousel-layout">
+        <button class="yt-carousel-nav-btn prev-btn" id="carouselPrevBtn" onclick="slideCarousel(-1)" aria-label="Previous Video">
+          <span>←</span> <span class="nav-text">${isTa ? 'முந்தையது' : 'Previous'}</span>
+        </button>
+
+        <div class="yt-carousel-viewport" id="carouselViewport">
+          <div class="yt-carousel-track" id="carouselTrack">
+            ${cardsHtml}
+          </div>
+        </div>
+
+        <button class="yt-carousel-nav-btn next-btn" id="carouselNextBtn" onclick="slideCarousel(1)" aria-label="Next Video">
+          <span class="nav-text">${isTa ? 'அடுத்தது' : 'Next'}</span> <span>→</span>
+        </button>
+      </div>
+
+      <!-- Carousel Indicators Below: ● ○ ○ ○ ○ and Counter 1 / 5 -->
+      <div class="yt-carousel-footer">
+        <div class="yt-carousel-indicators" id="carouselDots">
+          ${dotsHtml}
+        </div>
+        <div class="yt-counter-text" id="carouselCounterText">
+          1 / 5
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderPhotoShowcaseHtml(r, gallery, primaryImg, primaryCaption, title, isTa) {
+  return `
+    <section class="panel" style="margin-top:28px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div>
+          <span class="pill" style="background:#e0f2fe;color:#0284c7;border-color:#bae6fd;font-weight:700">📸 RECIPE PHOTO GALLERY</span>
+          <h3 style="margin-top:6px;font-size:1.4rem">${isTa ? 'செய்முறை புகைப்பட வழிகாட்டி' : 'High-Resolution Culinary Visual Gallery'}</h3>
+        </div>
+      </div>
+      <div class="recipe-photo-showcase" style="position:relative;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);background:#111">
+        <img id="mainShowcaseImg" src="${esc(primaryImg)}" alt="${esc(title)}" style="width:100%;height:400px;object-fit:cover;display:block;transition:transform 0.4s ease" onerror="this.onerror=null;this.src='/images/native_millets.jpg'">
+        <div class="recipe-photo-overlay" style="position:absolute;bottom:0;left:0;right:0;padding:24px 20px 16px;background:linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.92) 100%);color:#ffffff;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px">
+          <div>
+            <span class="pill" style="background:rgba(255,255,255,0.2);color:#fff;border-color:rgba(255,255,255,0.3);backdrop-filter:blur(6px);font-size:11px;font-weight:700">
+              🍽 ${esc(r.cuisine)} · ${esc(r.difficulty)}
+            </span>
+            <h4 id="showcaseCaption" style="font-size:1.3rem;color:#ffffff;margin:8px 0 4px;text-shadow:0 2px 8px rgba(0,0,0,0.7)">${esc(primaryCaption)}</h4>
+          </div>
+          <button type="button" class="btn small" onclick="openPhotoModal('${esc(primaryImg)}', '${esc(primaryCaption)}')" style="background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);backdrop-filter:blur(6px);font-weight:700">
+            🔍 ${isTa ? 'பெரிதாக்குக' : 'Zoom HD'}
+          </button>
+        </div>
+      </div>
+
+      ${gallery.length > 1 ? `
+        <div style="margin-top:14px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px">
+            ${gallery.map((g, idx) => `
+              <div class="gallery-thumb-card ${idx === 0 ? 'active' : ''}" onclick="selectGalleryPhoto('${esc(g.url)}', '${esc(g.caption)}', this)" style="cursor:pointer;background:var(--panel-alt);border:2px solid ${idx === 0 ? 'var(--primary)' : 'var(--line)'};border-radius:14px;overflow:hidden;transition:all 0.2s">
+                <img src="${esc(g.url)}" alt="${esc(g.label)}" style="width:100%;height:80px;object-fit:cover;display:block" onerror="this.onerror=null;this.src='/images/native_millets.jpg'">
+                <div style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--text);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  ${esc(g.label)}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      ` : ''}
+    </section>
+  `;
 }
 
 function bilingual(en, ta) {
@@ -220,27 +777,22 @@ async function loadRecipe() {
     const desc = bilingual(r.description, r.description_ta);
     const image = r.image_url || "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1100&q=80";
 
-    // YouTube Video resolution
-    let videoEmbedUrl = "";
-    let ytWatchUrl = r.video_url || "";
-
-    if (r.video_url) {
-      const embed = ytEmbed(r.video_url);
-      if (embed) {
-        videoEmbedUrl = embed;
-      }
-    }
-
-    if (!videoEmbedUrl) {
-      videoEmbedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(r.title + " recipe")}`;
-    }
-    if (!ytWatchUrl) {
-      ytWatchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.title + " recipe")}`;
-    }
+    // Video & Photo resolution
+    const validEmbedUrl = ytEmbed(r.video_url);
+    const hasVideo = !!validEmbedUrl;
+    const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(r.title + " recipe")}`;
+    const ytWatchUrl = (hasVideo && r.video_url) ? r.video_url : ytSearchUrl;
 
     const steps = (r.steps || []).map(s => `<li>${esc(bilingual(s.instruction, s.instruction_ta))}</li>`).join("");
     const currentUser = getUser();
     const defaultReviewerName = currentUser ? currentUser.name : "";
+
+    const prepTime = Number(r.prep_minutes) || 0;
+    const cookTime = Number(r.cook_minutes) || 0;
+    const totalTime = prepTime + cookTime;
+    const gallery = getRecipeGallery(r);
+    const primaryImg = gallery[0] ? gallery[0].url : (r.image_url || "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80");
+    const primaryCaption = gallery[0] ? gallery[0].caption : title;
 
     app.innerHTML = `
       <div class="two">
@@ -248,13 +800,33 @@ async function loadRecipe() {
           <img src="${esc(image)}" alt="${esc(title)}" style="width:100%;height:430px;object-fit:cover;border-radius:20px;box-shadow:var(--shadow)">
         </div>
         <div>
-          <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span class="pill">${esc(r.cuisine)} · ${esc(r.difficulty)}</span>
-            <span class="video-badge">▶ Video Available</span>
+            <span class="video-badge" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;font-weight:700">▶ 5 YouTube Videos</span>
+            <span class="pill" style="background:#e0f2fe;color:#0284c7;border-color:#bae6fd;font-weight:700">📸 Photo Guide</span>
           </div>
           <h1 style="margin:10px 0 6px">${esc(title)}</h1>
-          <p class="muted">By <b>${esc(r.author)}</b> · <span id="topRatingBox" style="color:#f59e0b;font-weight:700">⭐ ${Number(r.rating || 5).toFixed(1)}</span></p>
-          <p style="margin-top:6px">⏱ Prep: <b>${r.prep_minutes} min</b> | Cook: <b>${r.cook_minutes} min</b></p>
+          <p class="muted">By <b>${esc(r.author || "CookShare Chef")}</b> · <span id="topRatingBox" style="color:#f59e0b;font-weight:700">⭐ ${Number(r.rating || 5).toFixed(1)} / 5.0</span> (<span style="color:var(--text);font-weight:600">${r.reviews ? r.reviews.length : 0} reviews</span>)</p>
+
+          <!-- Times, Servings & Difficulty Stats Box -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:10px;margin:14px 0;background:var(--panel-alt);padding:14px;border-radius:14px;border:1px solid var(--line)">
+            <div>
+              <small style="color:var(--muted);font-weight:700;display:block;font-size:11px;text-transform:uppercase">⏱ Prep Time</small>
+              <strong style="font-size:1.05rem;color:var(--text)">${prepTime} min</strong>
+            </div>
+            <div>
+              <small style="color:var(--muted);font-weight:700;display:block;font-size:11px;text-transform:uppercase">🍳 Cook Time</small>
+              <strong style="font-size:1.05rem;color:var(--text)">${cookTime} min</strong>
+            </div>
+            <div>
+              <small style="color:var(--muted);font-weight:700;display:block;font-size:11px;text-transform:uppercase">⏳ Total Time</small>
+              <strong style="font-size:1.05rem;color:var(--primary)">${totalTime} min</strong>
+            </div>
+            <div>
+              <small style="color:var(--muted);font-weight:700;display:block;font-size:11px;text-transform:uppercase">🎯 Difficulty</small>
+              <strong style="font-size:1.05rem;color:var(--text)">${esc(r.difficulty || "Medium")}</strong>
+            </div>
+          </div>
 
           <!-- Interactive Serving Scaler -->
           <div class="scaler-box">
@@ -267,49 +839,36 @@ async function loadRecipe() {
 
           <p style="margin-top:10px;line-height:1.7">${esc(desc || "")}</p>
 
-          <div class="feature-row" style="margin-top:20px">
+          <div class="feature-row" style="margin-top:20px;flex-wrap:wrap;gap:10px">
             <button class="btn" onclick="saveFavorite(${r.id})">♡ ${tr("save")}</button>
-            <button class="btn alt" onclick="window.print()">🖨 ${tr("print")}</button>
             <button class="btn alt" onclick="shareRecipe('${encodeURIComponent(title)}')">↗ Share</button>
-            <a class="btn alt" href="#recipeVideo">▶ Watch Video</a>
+            <button class="btn alt whatsapp-btn" onclick="shareRecipeIngredientsToWhatsApp()" title="Send ingredients list to WhatsApp">📲 WhatsApp</button>
+            <button class="btn alt email-btn" onclick="shareRecipeIngredientsToEmail()" title="Send ingredients list via Email / Gmail">📧 Email</button>
+            <button class="btn alt" onclick="window.print()">🖨 ${tr("print")}</button>
+            <a class="btn alt" href="#recipeVideos" style="border-color:#ef4444;color:#ef4444;font-weight:700">▶ Watch Videos (5)</a>
           </div>
         </div>
       </div>
 
-      <!-- YouTube Recipe Video Section -->
-      <section id="recipeVideo" class="panel" style="margin-top:30px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
-          <div>
-            <span class="pill" style="background:#fee2e2;color:#b91c1c;border-color:#fecaca">▶ YOUTUBE RECIPE VIDEO</span>
-            <h2 style="margin-top:6px">${lang() === 'ta' ? 'செய்முறை வீடியோ வழிகாட்டி' : 'Step-by-Step Cooking Video Tutorial'}</h2>
-          </div>
-          <a href="${esc(ytWatchUrl)}" target="_blank" rel="noopener" class="btn small" style="background:#ef4444;box-shadow:0 4px 14px rgba(239,68,68,0.3)">
-            ▶ ${lang() === 'ta' ? 'யூடியூபில் பார்க்க' : 'Watch on YouTube'} ↗
-          </a>
-        </div>
+      <!-- 5-Video YouTube Carousel Section (Exact Requirement) -->
+      ${renderYouTubeCarousel(r, title, lang() === 'ta')}
 
-        <div class="video-wrap">
-          <iframe src="${esc(videoEmbedUrl)}" title="${esc(title)} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-
-        <!-- Direct YouTube Link Strip -->
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:12px 16px;background:var(--panel-alt);border:1px solid var(--line);border-radius:12px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:10px;min-width:240px">
-            <span style="font-size:20px;color:#ef4444">🔗</span>
-            <div>
-              <small style="color:var(--muted);display:block;font-weight:700">Direct YouTube URL:</small>
-              <a href="${esc(ytWatchUrl)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--primary);text-decoration:underline;word-break:break-all">${esc(ytWatchUrl)}</a>
-            </div>
-          </div>
-          <button class="btn small alt" onclick="navigator.clipboard.writeText('${esc(ytWatchUrl)}').then(()=>alert('YouTube video link copied to clipboard!'))">📋 Copy Video Link</button>
-        </div>
-      </section>
+      <!-- Recipe High-Resolution Photo Gallery -->
+      ${renderPhotoShowcaseHtml(r, gallery, primaryImg, primaryCaption, title, lang() === 'ta')}
 
       <div class="two" style="margin-top:30px">
         <section class="panel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
             <h2 style="margin:0">${tr("ingredients")}</h2>
-            <button class="btn small alt" onclick="addRecipeIngredients(${r.id})">🛒 Add to Shopping List</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn small whatsapp-btn" onclick="shareRecipeIngredientsToWhatsApp()" title="Share ingredients to WhatsApp">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
+                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm.01 16.59c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.04 8.04 0 01-1.23-4.28c0-4.46 3.63-8.09 8.09-8.09 2.16 0 4.19.84 5.72 2.37 1.53 1.53 2.37 3.56 2.37 5.72 0 4.46-3.63 8.14-8.16 8.14zm4.44-6.09c-.24-.12-1.44-.71-1.66-.79-.22-.09-.39-.12-.55.12-.17.24-.64.79-.79.95-.14.17-.29.19-.53.07-.24-.12-1.03-.38-1.96-1.21-.72-.64-1.21-1.44-1.35-1.68-.14-.24-.02-.37.1-.49.11-.11.24-.29.37-.43.12-.14.17-.24.25-.4.08-.17.04-.31-.02-.43-.07-.12-.55-1.33-.76-1.82-.2-.48-.41-.41-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.24-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.78 2.71 4.3 3.8.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28z"/>
+                </svg>
+                <span>📲 WhatsApp</span>
+              </button>
+              <button class="btn small alt" onclick="addRecipeIngredients(${r.id})">🛒 Add to Shopping List</button>
+            </div>
           </div>
           <ul id="ingredientsList" style="line-height:1.8">
             ${renderIngredients()}
@@ -378,6 +937,10 @@ async function loadRecipe() {
         </div>
       </section>
     `;
+
+    // Initialize interactive YouTube Carousel gestures and responsive sizing
+    initCarouselTouch();
+    setTimeout(updateCarouselState, 50);
   } catch (e) {
     app.innerHTML = `<div class="panel empty" style="color:var(--danger)"><h2>Error loading recipe</h2><p>${esc(e.message)}</p></div>`;
   }
@@ -516,6 +1079,74 @@ function shareRecipe(t) {
   } else {
     prompt("Copy recipe link:", shareUrl);
   }
+}
+
+function shareRecipeIngredientsToWhatsApp() {
+  if (!currentRecipe || !currentRecipe.ingredients || !currentRecipe.ingredients.length) {
+    showToast(lang() === "ta" ? "செய்முறை பொருட்கள் எதுவும் இல்லை!" : "No ingredients found in this recipe!", "error");
+    return;
+  }
+
+  const isTa = lang() === "ta";
+  const dishTitle = bilingual(currentRecipe.title, currentRecipe.title_ta);
+
+  const items = currentRecipe.ingredients.map(i => {
+    const scaledQty = scaleQuantity(i.quantity, baseServings, currentServings);
+    return {
+      name: bilingual(i.name, i.name_ta),
+      quantity: scaledQty,
+      unit: isTa ? (i.unit_ta || i.unit || "") : (i.unit || ""),
+      category: dishTitle,
+      dish_name: dishTitle,
+      purchased: false
+    };
+  });
+
+  const headerTitle = isTa
+    ? `🛒 *குக்ஷேர் - \"${dishTitle}\" தேவையான பொருட்கள் (${currentServings} நபர்கள்)*`
+    : `🛒 *CookShare - \"${dishTitle}\" Recipe Ingredients (${currentServings} Servings)*`;
+
+  openWhatsAppModal({
+    title: headerTitle,
+    items,
+    dishes: [dishTitle],
+    defaultDish: dishTitle,
+    showPendingToggle: false
+  });
+}
+
+function shareRecipeIngredientsToEmail() {
+  if (!currentRecipe || !currentRecipe.ingredients || !currentRecipe.ingredients.length) {
+    showToast(lang() === "ta" ? "செய்முறை பொருட்கள் எதுவும் இல்லை!" : "No ingredients found in this recipe!", "error");
+    return;
+  }
+
+  const isTa = lang() === "ta";
+  const dishTitle = bilingual(currentRecipe.title, currentRecipe.title_ta);
+
+  const items = currentRecipe.ingredients.map(i => {
+    const scaledQty = scaleQuantity(i.quantity, baseServings, currentServings);
+    return {
+      name: bilingual(i.name, i.name_ta),
+      quantity: scaledQty,
+      unit: isTa ? (i.unit_ta || i.unit || "") : (i.unit || ""),
+      category: dishTitle,
+      dish_name: dishTitle,
+      purchased: false
+    };
+  });
+
+  const headerTitle = isTa
+    ? `🛒 குக்ஷேர் - \"${dishTitle}\" தேவையான பொருட்கள் (${currentServings} நபர்கள்)`
+    : `🛒 CookShare - \"${dishTitle}\" Recipe Ingredients (${currentServings} Servings)`;
+
+  openEmailModal({
+    title: headerTitle,
+    items,
+    dishes: [dishTitle],
+    defaultDish: dishTitle,
+    showPendingToggle: false
+  });
 }
 
 loadRecipe();

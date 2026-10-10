@@ -65,7 +65,14 @@ router.get("/:id", async (req,res)=>{
     const [ingredients]=await db.query("SELECT id,name,name_ta,quantity,unit,unit_ta FROM ingredients WHERE recipe_id=? ORDER BY id",[recipe.id]);
     const [steps]=await db.query("SELECT id,step_no,instruction,instruction_ta FROM recipe_steps WHERE recipe_id=? ORDER BY step_no",[recipe.id]);
     const [reviews]=await db.query(`SELECT rv.rating,rv.comment,rv.created_at,u.name FROM reviews rv JOIN users u ON u.id=rv.user_id WHERE rv.recipe_id=? ORDER BY rv.created_at DESC`,[recipe.id]);
-    res.json({...recipe,ingredients,steps,reviews});
+    let videos = [];
+    try {
+      const [videoRows] = await db.query("SELECT id, title, video_url, video_id, channel_name, thumbnail_url, display_order FROM recipe_videos WHERE recipe_id=? ORDER BY display_order ASC", [recipe.id]);
+      videos = videoRows || [];
+    } catch (e) {
+      videos = [];
+    }
+    res.json({...recipe,ingredients,steps,reviews,videos});
   }catch(err){res.status(500).json({message:err.message});}
 });
 

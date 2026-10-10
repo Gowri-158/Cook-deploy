@@ -95,6 +95,11 @@ CREATE TABLE IF NOT EXISTS meal_plans (
   UNIQUE(user_id,plan_date,meal_type), FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS saved_meal_plans (
+  id INT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, name VARCHAR(200) NOT NULL,
+  plan_data LONGTEXT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
 -- Upgrade an existing CookShare database once:
 -- ALTER TABLE recipes ADD COLUMN title_ta VARCHAR(200), ADD COLUMN description_ta TEXT,

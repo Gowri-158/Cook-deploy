@@ -1070,3 +1070,638 @@ footer {
   transform: translateY(-1px);
 }
 
+/* ============================================================
+   WhatsApp Integration & Sharing Modal
+   ============================================================ */
+.whatsapp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: waFadeIn 0.22s ease-out forwards;
+}
+
+@keyframes waFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.whatsapp-modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  animation: waSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes waSlideUp {
+  from {
+    transform: translateY(24px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.whatsapp-modal-header {
+  background: linear-gradient(135deg, #075E54 0%, #128C7E 100%);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.whatsapp-chat-preview {
+  background: #e5ddd5;
+  background-image: radial-gradient(#d1c7bc 1px, transparent 1px);
+  background-size: 16px 16px;
+  border-radius: 14px;
+  padding: 14px;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .whatsapp-chat-preview,
+[data-theme="oled"] .whatsapp-chat-preview {
+  background: #0b141a;
+  background-image: radial-gradient(#1f2c34 1px, transparent 1px);
+  background-size: 16px 16px;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.whatsapp-bubble {
+  background: #dcf8c6;
+  color: #111827;
+  border-radius: 10px 10px 2px 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  max-width: 96%;
+  margin-left: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  user-select: text;
+}
+
+[data-theme="dark"] .whatsapp-bubble,
+[data-theme="oled"] .whatsapp-bubble {
+  background: #005c4b;
+  color: #e9edef;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.whatsapp-btn {
+  background: #25D366;
+  color: #ffffff !important;
+  border: none;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.whatsapp-btn:hover {
+  background: #20bd5a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45);
+}
+
+.email-modal-header {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.email-preview-box {
+  background: var(--panel-alt);
+  border-radius: 14px;
+  padding: 14px 16px;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  user-select: text;
+}
+
+.email-btn {
+  background: #2563eb;
+  color: #ffffff !important;
+  border: none;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.email-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+/* ============================================================
+   Recipe Photo Showcase & Visual Gallery
+   ============================================================ */
+.recipe-photo-showcase {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  margin-top: 14px;
+  background: #09090b;
+}
+
+.recipe-photo-showcase img {
+  width: 100%;
+  height: 440px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recipe-photo-showcase:hover img {
+  transform: scale(1.02);
+}
+
+.recipe-photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 32px 24px 20px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 45%, rgba(0, 0, 0, 0.94) 100%);
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.gallery-thumb-card {
+  cursor: pointer;
+  background: var(--panel-alt);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.22s ease;
+}
+
+.gallery-thumb-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.gallery-thumb-card.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* ============================================================
+   5-Video YouTube Carousel Section & Responsive Styling
+   ============================================================ */
+.yt-carousel-section {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 28px 24px;
+  margin-top: 32px;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.yt-carousel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.yt-carousel-title-group h2 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin: 6px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.015em;
+}
+
+.yt-carousel-title-group p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.yt-carousel-top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] .yt-carousel-top-badge,
+[data-theme="oled"] .yt-carousel-top-badge {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+/* Carousel Layout (← Previous [Cards] Next →) */
+.yt-carousel-layout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  margin: 10px 0;
+}
+
+.yt-carousel-nav-btn {
+  background: var(--panel-alt);
+  color: var(--text);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.yt-carousel-nav-btn:hover:not(:disabled) {
+  background: #ef4444;
+  color: #ffffff !important;
+  border-color: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+
+.yt-carousel-nav-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.yt-carousel-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.yt-carousel-viewport {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 18px;
+  padding: 8px 4px;
+  position: relative;
+  touch-action: pan-y pinch-zoom;
+}
+
+.yt-carousel-track {
+  display: flex;
+  gap: 18px;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Individual Video Cards */
+.yt-video-card {
+  flex-shrink: 0;
+  width: calc((100% - 36px) / 3); /* 3 cards on desktop by default */
+  background: var(--panel-alt);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+.yt-video-card:hover {
+  transform: translateY(-6px);
+  border-color: #ef4444;
+  box-shadow: 0 14px 30px rgba(239, 68, 68, 0.18);
+}
+
+.yt-video-card.active-slide {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+/* Thumbnail Wrapper */
+.yt-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.yt-thumb-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  display: block;
+}
+
+.yt-video-card:hover .yt-thumb-img {
+  transform: scale(1.06);
+}
+
+.yt-play-pill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s ease, background 0.25s ease;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.yt-video-card:hover .yt-play-pill {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: #ff0000;
+}
+
+.yt-badge-bottom {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.yt-badge-index {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+/* Card Body */
+.yt-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.yt-meta-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.yt-brand-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.yt-card-recipe-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yt-channel-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.1);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  padding: 2px 7px;
+  border-radius: 6px;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yt-video-card-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: var(--text);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.9em;
+}
+
+.yt-watch-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: #ef4444;
+  color: #ffffff !important;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.28);
+  border: none;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.yt-watch-action-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.42);
+}
+
+/* Carousel Indicators & Footer */
+.yt-carousel-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.yt-carousel-indicators {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.yt-carousel-dot {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.yt-carousel-dot:hover {
+  color: #ef4444;
+  transform: scale(1.2);
+}
+
+.yt-carousel-dot.active {
+  color: #ef4444;
+  font-size: 24px;
+  transform: scale(1.25);
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.yt-carousel-counter {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--panel-alt);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1024px) {
+  .yt-video-card {
+    width: calc((100% - 18px) / 2); /* 2 cards on tablet */
+  }
+}
+
+@media (max-width: 680px) {
+  .yt-carousel-section {
+    padding: 20px 14px;
+  }
+  .yt-carousel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .yt-carousel-layout {
+    gap: 8px;
+  }
+  .yt-carousel-nav-btn {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+  .yt-carousel-nav-btn .nav-text {
+    display: none; /* Icon only on tight mobile */
+  }
+  .yt-video-card {
+    width: 100%; /* 1 card at a time on mobile */
+  }
+  .yt-video-card-title {
+    font-size: 0.94rem;
+    min-height: auto;
+  }
+}
+
+
+

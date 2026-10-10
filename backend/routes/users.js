@@ -111,6 +111,69 @@ router.get("/me/shopping-list", auth, async (req, res) => {
   }
 });
 
+router.get("/me/shopping-list/whatsapp-text", auth, async (req, res) => {
+  try {
+    const { dish, pendingOnly } = req.query;
+    let query = `
+      SELECT id, name, quantity, unit, category,
+             COALESCE(NULLIF(dish_name, ''), category, 'General') AS dish_name,
+             purchased
+      FROM shopping_items
+      WHERE user_id=?
+    `;
+    const params = [req.user.id];
+
+    if (dish && dish !== "all" && dish !== "All Dishes") {
+      query += ` AND (LOWER(dish_name) = LOWER(?) OR (dish_name = '' AND LOWER(category) = LOWER(?)))`;
+      params.push(dish, dish);
+    }
+
+    if (pendingOnly === "true" || pendingOnly === "1") {
+      query += ` AND purchased=0`;
+    }
+
+    query += ` ORDER BY COALESCE(NULLIF(dish_name, ''), category), name`;
+    const [rows] = await db.query(query, params);
+
+    const today = new Date().toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+
+    let header = `🛒 *CookShare - Grocery & Shopping List*\n📅 Date: ${today}\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+    if (dish && dish !== "all" && dish !== "All Dishes") {
+      header = `🛒 *CookShare - ${dish} Ingredients*\n📅 Date: ${today}\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+    }
+
+    const groups = {};
+    for (const r of rows) {
+      const g = r.dish_name || "General";
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(r);
+    }
+
+    let text = header;
+    for (const g of Object.keys(groups)) {
+      text += `🍽 *${g}* (${groups[g].length})\n`;
+      for (const item of groups[g]) {
+        const check = item.purchased ? "☑" : "◻";
+        const qtyStr = (item.quantity && item.unit) ? ` - ${item.quantity} ${item.unit}` : (item.quantity ? ` - ${item.quantity}` : "");
+        text += `  ${check} ${item.name}${qtyStr}\n`;
+      }
+      text += `\n`;
+    }
+
+    text += `━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `📊 *Total Items:* ${rows.length}\n`;
+    text += `✨ _Shared via CookShare Culinary Platform_`;
+
+    res.json({ text, count: rows.length, items: rows });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.post("/me/shopping-list", auth, async (req, res) => {
   try {
     const { name, quantity, unit, category, dish_name } = req.body;
@@ -366,6 +429,134 @@ router.post("/me/meal-plan/sync-to-shopping", auth, async (req, res) => {
       message: `Successfully set shopping list to ${addedCount} ingredients from your Meal Plan!`,
       count: addedCount
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get user's saved weekly meal plan
+router.get("/me/meal-plan", auth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT plan_date, meal_type, recipe_id FROM meal_plans WHERE user_id = ?",
+      [req.user.id]
+    );
+    const plan = {};
+    if (Array.isArray(rows)) {
+      rows.forEach(r => {
+        plan[`${r.plan_date}_${r.meal_type}`] = r.recipe_id;
+      });
+    }
+    res.json({ plan });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Save user's weekly meal plan
+router.post("/me/meal-plan", auth, async (req, res) => {
+  try {
+    const { plan } = req.body;
+    if (!plan || typeof plan !== "object") {
+      return res.status(400).json({ message: "Invalid plan format" });
+    }
+    await db.query("DELETE FROM meal_plans WHERE user_id = ?", [req.user.id]);
+    for (const [key, recipeId] of Object.entries(plan)) {
+      if (!recipeId) continue;
+      const parts = key.split("_");
+      const planDate = parts[0];
+      const mealType = parts[1] || "Meal";
+      await db.query(
+        "INSERT INTO meal_plans (user_id, plan_date, meal_type, recipe_id) VALUES (?, ?, ?, ?)",
+        [req.user.id, planDate, mealType, Number(recipeId)]
+      );
+    }
+    res.json({ message: "Weekly meal plan saved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all saved meal plans (templates/previous plans) for current user
+router.get("/me/saved-meal-plans", auth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, name, plan_data, created_at FROM saved_meal_plans WHERE user_id = ? ORDER BY id DESC",
+      [req.user.id]
+    );
+    const plans = (rows || []).map(r => {
+      let parsed = {};
+      try {
+        parsed = typeof r.plan_data === "string" ? JSON.parse(r.plan_data) : (r.plan_data || {});
+      } catch (e) {
+        parsed = {};
+      }
+      return {
+        id: r.id,
+        name: r.name,
+        plan_data: parsed,
+        created_at: r.created_at
+      };
+    });
+    res.json(plans);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Save a meal plan as template for future reuse
+router.post("/me/saved-meal-plans", auth, async (req, res) => {
+  try {
+    const { name, plan_data, plan, excluded, customItems } = req.body;
+    let payload = plan_data;
+    if (!payload) {
+      payload = {
+        plan: plan || {},
+        excluded: excluded || [],
+        customItems: customItems || []
+      };
+    }
+    const jsonStr = typeof payload === "string" ? payload : JSON.stringify(payload);
+    const planName = (name || "").trim() || `Meal Plan (${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })})`;
+
+    const [result] = await db.query(
+      "INSERT INTO saved_meal_plans (user_id, name, plan_data) VALUES (?, ?, ?)",
+      [req.user.id, planName, jsonStr]
+    );
+    res.status(201).json({
+      message: "Meal plan saved for future reuse successfully!",
+      id: result.insertId || result.lastInsertRowid
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Rename a saved meal plan
+router.put("/me/saved-meal-plans/:id", auth, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+    await db.query(
+      "UPDATE saved_meal_plans SET name = ? WHERE id = ? AND user_id = ?",
+      [name.trim(), req.params.id, req.user.id]
+    );
+    res.json({ message: "Saved meal plan renamed successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete a saved meal plan
+router.delete("/me/saved-meal-plans/:id", auth, async (req, res) => {
+  try {
+    await db.query(
+      "DELETE FROM saved_meal_plans WHERE id = ? AND user_id = ?",
+      [req.params.id, req.user.id]
+    );
+    res.json({ message: "Saved meal plan deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

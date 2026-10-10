@@ -159,10 +159,38 @@ async function initSqliteDb() {
       related_recipe_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS recipe_videos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipe_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      video_url TEXT NOT NULL,
+      thumbnail_url TEXT,
+      display_order INTEGER DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS saved_meal_plans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      plan_data TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   try {
     dbInstance.run("ALTER TABLE shopping_items ADD COLUMN dish_name TEXT DEFAULT ''");
+  } catch (e) {}
+  try {
+    dbInstance.run(`
+      CREATE TABLE IF NOT EXISTS saved_meal_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        plan_data TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
   } catch (e) {}
 
   // Check if users exist; if not, seed full authentic dataset
@@ -252,7 +280,7 @@ async function seedSqliteData(db) {
       cook_minutes: 15,
       servings: 2,
       image_url: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=1200&q=80",
-      video_url: "https://www.youtube.com/results?search_query=Crispy+Ghee+Podi+Masala+Dosa+Recipe",
+      video_url: "https://www.youtube.com/watch?v=A4nS7oU3wGk",
       subtitle_url: "/subtitles/dosa_en_ta.vtt",
       dietary_tags: "Vegetarian, Probiotic, Classic",
       status: "PUBLISHED",
@@ -284,7 +312,7 @@ async function seedSqliteData(db) {
       cook_minutes: 45,
       servings: 5,
       image_url: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=1200&q=80",
-      video_url: "https://www.youtube.com/results?search_query=Royal+Ambur+Mutton+Dum+Biryani+Recipe",
+      video_url: "https://www.youtube.com/watch?v=R9U0X8Zz53g",
       subtitle_url: "/subtitles/biryani_en_ta.vtt",
       dietary_tags: "Non-Veg, Halal, Festive Feast",
       status: "PUBLISHED",
@@ -317,7 +345,7 @@ async function seedSqliteData(db) {
       cook_minutes: 25,
       servings: 4,
       image_url: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=1200&q=80",
-      video_url: "https://www.youtube.com/results?search_query=Creamy+Shahi+Paneer+Butter+Masala+Recipe",
+      video_url: "https://www.youtube.com/watch?v=T9hQV22Uezw",
       subtitle_url: "/subtitles/paneer_en_ta.vtt",
       dietary_tags: "Vegetarian, High-Protein, Rich",
       status: "PUBLISHED",
@@ -348,8 +376,8 @@ async function seedSqliteData(db) {
       prep_minutes: 15,
       cook_minutes: 20,
       servings: 4,
-      image_url: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=1200&q=80",
-      video_url: "https://www.youtube.com/results?search_query=Village+Drumstick+Shallot+Sambar+Recipe",
+      image_url: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=1200&q=80",
+      video_url: "https://www.youtube.com/watch?v=A2dYp1Wn-1M",
       subtitle_url: "/subtitles/sambar_en_ta.vtt",
       dietary_tags: "Vegetarian, Vegan, High-Fiber, Comfort Food",
       status: "PUBLISHED",
